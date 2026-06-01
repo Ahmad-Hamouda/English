@@ -182,7 +182,31 @@
   .day-pick.sel .dp-today{color:#0d0f14}
   .day-pick.complete::after{content:'✓';position:absolute;top:3px;right:5px;font-size:9px;color:var(--grn);font-weight:700}
   .day-pick.sel.complete::after{color:#0d0f14}
+  .day-pick.locked{opacity:.45;cursor:not-allowed}
+  .day-pick.locked .dp-num{font-size:13px}
+  .lock-msg{display:none;background:rgba(224,90,90,.12);border:1px solid rgba(224,90,90,.35);color:var(--red);font-size:12px;text-align:center;padding:9px 12px;border-radius:10px;margin-bottom:14px}
+  .lock-msg.show{display:block;animation:fade .3s ease}
   .today-head{text-align:center;margin-bottom:18px}
+
+  /* inline today content */
+  .t-spk{width:30px;height:26px;border-radius:7px;border:1px solid rgba(240,165,0,.4);background:var(--surf);color:var(--gold);font-size:12px;cursor:pointer;vertical-align:middle}
+  .t-mic{width:30px;height:26px;border-radius:7px;border:1px solid rgba(123,140,255,.4);background:var(--surf);color:var(--pur);font-size:12px;cursor:pointer;vertical-align:middle;margin-left:4px}
+  .t-mic.rec{background:rgba(224,90,90,.18);border-color:var(--red);color:var(--red);animation:pulse .8s infinite}
+  .t-wordlist{display:flex;flex-direction:column;gap:8px}
+  .t-word{background:var(--surf);border:1px solid var(--bd);border-radius:10px;padding:9px 11px}
+  .t-w-text{font-size:13px;line-height:1.4}
+  .t-w-pos{font-size:10px;color:var(--gold);background:rgba(240,165,0,.1);padding:1px 6px;border-radius:100px}
+  .t-w-mean{color:var(--mut);font-size:12px}
+  .t-w-btns{display:flex;align-items:center;gap:2px;margin-top:7px}
+  .t-add{width:30px;height:26px;border-radius:7px;border:1px solid rgba(79,195,161,.4);background:var(--surf);color:var(--grn);font-size:14px;font-weight:700;cursor:pointer;margin-left:auto}
+  .t-add.on{background:rgba(79,195,161,.15)}
+  .t-dia-title{font-family:'Fraunces',serif;font-size:15px;font-weight:600;margin-bottom:8px}
+  .t-dia-play{width:100%;padding:9px 0;border-radius:9px;border:1px solid rgba(240,165,0,.4);background:rgba(240,165,0,.08);color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:10px}
+  .t-dia-play.sp{background:rgba(240,165,0,.18)}
+  .t-line{font-size:13px;line-height:1.5;padding:7px 0;border-bottom:1px solid var(--bd)}
+  .t-line-who{font-weight:700;color:var(--pur)}
+  .t-line.b .t-line-who{color:var(--grn)}
+  .t-gram-eg{font-family:'Fraunces',serif;font-style:italic;font-size:14px;color:var(--tx);line-height:1.5}
   .today-date{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
   .today-greet{font-family:'Fraunces',serif;font-size:24px;font-weight:700}
   .today-prog-wrap{background:var(--surf);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:8px;display:flex;align-items:center;gap:16px}
@@ -902,10 +926,10 @@ document.getElementById('diaList').addEventListener('keydown',e=>{
 
 // play all lines in sequence
 let diaQueue=null;
-function playWholeDialogue(btn){
+function playWholeDialogue(btn, diaObj){
   if(diaQueue){ window.speechSynthesis.cancel(); diaQueue=null; clearBtn(); btn.classList.remove('sp'); btn.textContent='🎬 Play whole conversation'; return; }
   if(!('speechSynthesis' in window)) return;
-  const d=DIALOGUES.find(x=>x.id===curDia);
+  const d=diaObj || DIALOGUES.find(x=>x.id===curDia);
   btn.classList.add('sp'); btn.textContent='⏹ Stop';
   let idx=0;
   diaQueue=true;
@@ -1124,6 +1148,22 @@ function todayKey(){ return 'today_'+selectedDay; }
 let todayState=JSON.parse(localStorage.getItem(todayKey())||'{}');
 function saveToday(){ localStorage.setItem(todayKey(), JSON.stringify(todayState)); }
 
+// a day is unlocked only if it's the first lesson day, OR the previous day is fully complete
+function dayComplete(ds){
+  const st=JSON.parse(localStorage.getItem('today_'+ds)||'{}');
+  return TODAY_TASKS.every(t=>st[t.id]);
+}
+function isDayUnlocked(ds){
+  const idx=dayIndex(ds);
+  if(idx<=0) return true;
+  // today and any past day are always open; only FUTURE days can be locked
+  if(ds<=todayStr()) return true;
+  // a future day unlocks only if the day before it is fully complete
+  const prev=new Date(ds+'T00:00:00'); prev.setDate(prev.getDate()-1);
+  const prevStr=prev.toISOString().slice(0,10);
+  return dayComplete(prevStr);
+}
+
 // build the 7-day week (this week, Mon–Sun) for the picker
 function getWeekDays(){
   const now=new Date();
@@ -1150,6 +1190,28 @@ function getStreak(){
     else break;
   }
   return streak;
+}
+
+// ---- Per-day content: each day gets its own slice of words + a dialogue ----
+function dayIndex(dateStr){
+  // days since a fixed anchor so each calendar day maps to a stable lesson number
+  const anchor=new Date('2026-06-01T00:00:00');
+  const d=new Date(dateStr+'T00:00:00');
+  return Math.max(0, Math.round((d-anchor)/86400000));
+}
+function getDayPlan(dateStr){
+  const idx=dayIndex(dateStr);
+  const a2=VOCAB.a2b1, b1=VOCAB.b1b2, link=VOCAB.connect;
+  // 10 words/day: rotate through a2b1 then b1b2 then connect, looping
+  const allWords=[...a2,...b1,...link];
+  const wStart=(idx*10)%allWords.length;
+  const words=[];
+  for(let i=0;i<10;i++) words.push(allWords[(wStart+i)%allWords.length]);
+  // one dialogue per day, looping through the list
+  const dialogue=DIALOGUES[idx%DIALOGUES.length];
+  // one grammar point per day
+  const grammar=GRAMMAR[idx%GRAMMAR.length];
+  return {idx, words, dialogue, grammar};
 }
 
 const TODAY_TASKS=[
@@ -1186,26 +1248,25 @@ function renderToday(){
     const allDone=TODAY_TASKS.every(t=>st[t.id]);
     const isSel=ds===selectedDay;
     const isTod=ds===todayStr();
-    let cls='day-pick'; if(isSel) cls+=' sel'; if(allDone) cls+=' complete';
-    picker+='<button class="'+cls+'" data-day="'+ds+'">'+
+    const locked=!isDayUnlocked(ds);
+    let cls='day-pick'; if(isSel) cls+=' sel'; if(allDone) cls+=' complete'; if(locked) cls+=' locked';
+    picker+='<button class="'+cls+'" '+(locked?'data-locked="1"':'data-day="'+ds+'"')+'>'+
       '<span class="dp-dow">'+wkLabels[i]+'</span>'+
-      '<span class="dp-num">'+d.getDate()+'</span>'+
+      '<span class="dp-num">'+(locked?'🔒':d.getDate())+'</span>'+
       (isTod?'<span class="dp-today">•</span>':'')+
       '</button>';
   });
   picker+='</div>';
-
-  // word of the day for the mini-card (based on selected day)
-  const allW=[...VOCAB.a2b1,...VOCAB.b1b2];
-  const dayNum=Math.floor((sel-new Date(sel.getFullYear(),0,0))/86400000);
-  const wod=allW[dayNum%allW.length];
+  picker+='<div class="lock-msg" id="lockMsg">🔒 Finish the previous day first to unlock this one.</div>';
+  const plan=getDayPlan(selectedDay);
+  const wod=plan.words[0]; // word of the day = first word of the day's set
 
   // progress ring
   const r=26, circ=2*Math.PI*r, off=circ*(1-pct/100);
 
   let html=picker;
   html+='<div class="today-head">'+
-    '<div class="today-date">'+(isToday?'🌅 Today · ':'')+dateStr+'</div>'+
+    '<div class="today-date">'+(isToday?'🌅 Today · ':'')+dateStr+' · <span style="color:var(--pur)">Day '+(plan.idx+1)+'</span></div>'+
     '<div class="today-greet">'+(isToday?greet+'! 👋':'Plan for this day')+'</div></div>';
 
   html+='<div class="today-prog-wrap">'+
@@ -1219,19 +1280,52 @@ function renderToday(){
 
   if(streak>0 && isToday) html+='<div class="today-streak">🔥 '+streak+'-day streak — don\'t break it!</div>';
 
+  function sp(txt){ return '<button class="t-spk" onclick="speak('+JSON.stringify(txt).replace(/"/g,'&quot;')+', this)">🔊</button>'; }
+  function mic(txt,id){ return '<button class="t-mic" data-tmic="'+id+'" data-tmtext="'+txt.replace(/"/g,'&quot;')+'">🎤</button>'; }
+
   html+=TODAY_TASKS.map(t=>{
     const done=!!todayState[t.id];
-    let extra='';
+    let extra=t.sub;
     if(t.id==='review') extra=t.sub+' · <b style="color:var(--gold)">'+dueN+' due now</b>';
-    else extra=t.sub;
 
     let content='';
     if(t.id==='wotd'){
-      content='<div class="task-content"><div class="today-mini-word">'+wod.w+
-        ' <button class="today-mini-spk" onclick="speak('+JSON.stringify(wod.w).replace(/"/g,'&quot;')+', this)">🔊</button></div>'+
+      content='<div class="task-content"><div class="today-mini-word">'+wod.w+' '+sp(wod.w)+'</div>'+
         '<div class="today-mini-mean">'+wod.m+' — "'+wod.ex+'"</div></div>';
-    } else if(t.go){
-      content='<div class="task-content"><button class="task-go" data-goto="'+t.go+'">Open '+t.title.split(' ')[0]+' →</button></div>';
+    }
+    else if(t.id==='newvocab'){
+      // show this day's 10 words inline, each with speak + mic + add-to-review
+      content='<div class="task-content"><div class="t-wordlist">'+
+        plan.words.map((w,wi)=>{
+          const added=!!srs[w.w];
+          return '<div class="t-word">'+
+            '<span class="t-w-text"><b>'+w.w+'</b> <span class="t-w-pos">'+w.pos+'</span><br><span class="t-w-mean">'+w.m+'</span></span>'+
+            '<span class="t-w-btns">'+sp(w.w)+mic(w.w,'tw'+wi)+'<button class="t-add '+(added?'on':'')+'" data-tadd="'+encodeURIComponent(w.w)+'">'+(added?'✓':'+')+'</button></span>'+
+            '<div class="mic-result" id="tres-tw'+wi+'"></div>'+
+            '</div>';
+        }).join('')+'</div></div>';
+    }
+    else if(t.id==='dialogue'){
+      const d=plan.dialogue;
+      content='<div class="task-content"><div class="t-dia-title">'+d.title+' <span class="t-w-pos">'+d.level+'</span></div>'+
+        '<button class="t-dia-play" data-tdiaplay="1">🎬 Play whole conversation</button>'+
+        d.lines.map((l,li)=>'<div class="t-line '+l.side+'">'+
+          '<span class="t-line-who">'+l.who+':</span> '+l.t+' '+sp(l.t)+mic(l.t,'tl'+li)+
+          '<div class="mic-result" id="tres-tl'+li+'"></div></div>').join('')+
+        '</div>';
+    }
+    else if(t.id==='speak'){
+      // grammar sentence of the day to practice with mic
+      const g=plan.grammar;
+      content='<div class="task-content"><div class="t-w-mean" style="margin-bottom:6px">Grammar focus: <b style="color:var(--gold)">'+g.t+'</b></div>'+
+        '<div class="t-gram-eg">"'+g.e+'" '+sp(g.e)+mic(g.e,'tg0')+'</div>'+
+        '<div class="mic-result" id="tres-tg0"></div></div>';
+    }
+    else if(t.id==='review'){
+      content='<div class="task-content"><button class="task-go" data-goto="review">Open Review →</button></div>';
+    }
+    else if(t.id==='quiz'){
+      content='<div class="task-content"><button class="task-go" data-goto="quiz">Open Quiz →</button></div>';
     }
 
     return '<div class="task '+(done?'done':'')+'" data-task="'+t.id+'">'+
@@ -1254,6 +1348,33 @@ function renderToday(){
 document.getElementById('todayBox').addEventListener('click',e=>{
   const day=e.target.closest('[data-day]');
   if(day){ selectedDay=day.dataset.day; renderToday(); return; }
+  const lockedDay=e.target.closest('[data-locked]');
+  if(lockedDay){
+    const box=document.getElementById('lockMsg');
+    if(box){ box.classList.add('show'); setTimeout(()=>box.classList.remove('show'),2600); }
+    return;
+  }
+
+  // inline mic on a word/line/grammar
+  const tmic=e.target.closest('[data-tmic]');
+  if(tmic){
+    const id=tmic.dataset.tmic;
+    const txt=tmic.getAttribute('data-tmtext');
+    startListening(txt, tmic, document.getElementById('tres-'+id), null);
+    return;
+  }
+  // add this day's word to review
+  const tadd=e.target.closest('[data-tadd]');
+  if(tadd){
+    const w=decodeURIComponent(tadd.dataset.tadd);
+    if(srs[w]){ delete srs[w]; saveSRS(); } else { srsAdd(w); }
+    updateDueBadge(); renderToday();
+    return;
+  }
+  // play whole dialogue for the day
+  const tdia=e.target.closest('[data-tdiaplay]');
+  if(tdia){ const plan=getDayPlan(selectedDay); playWholeDialogue(tdia, plan.dialogue); return; }
+
   const goto=e.target.closest('[data-goto]');
   if(goto){ document.querySelector('[data-p="'+goto.dataset.goto+'"]').click(); return; }
   const task=e.target.closest('[data-task]');
