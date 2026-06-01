@@ -131,6 +131,45 @@
   .due-badge{background:rgba(224,90,90,.15);border:1px solid rgba(224,90,90,.35);color:var(--red);font-size:9px;padding:1px 7px;border-radius:100px;letter-spacing:1px;margin-left:4px}
   .review-bar{display:flex;gap:6px;margin-bottom:14px}
   .review-btn{flex:1;padding:10px 0;border-radius:10px;border:1px solid rgba(79,195,161,.35);background:rgba(79,195,161,.08);color:var(--grn);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .vlearn{margin-top:10px;width:100%;padding:9px 0;border-radius:10px;border:1px solid rgba(123,140,255,.4);background:rgba(123,140,255,.08);color:var(--pur);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .vlearn.added{border-color:rgba(79,195,161,.4);background:rgba(79,195,161,.1);color:var(--grn)}
+  .gram-btns{display:flex;gap:8px;margin-top:10px}
+  .gram-spk{width:40px;padding:7px 0;border-radius:9px;border:1px solid rgba(240,165,0,.4);background:var(--surf);color:var(--gold);font-size:14px;cursor:pointer}
+  .gram-mic{flex:1;padding:7px 0;border-radius:9px;border:1px solid rgba(123,140,255,.4);background:rgba(123,140,255,.08);color:var(--pur);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .gram-mic.rec{background:rgba(224,90,90,.18);border-color:var(--red);color:var(--red);animation:pulse .8s infinite}
+
+  /* due count badge on tab */
+  .due-count{display:none;background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:1px 7px;border-radius:100px;margin-left:2px}
+  .due-count.show{display:inline-block}
+
+  /* review card */
+  .rev-card{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:26px 20px;text-align:center}
+  .rev-progress{font-size:12px;color:var(--mut);margin-bottom:14px}
+  .rev-word{font-family:'Fraunces',serif;font-size:30px;font-weight:700;margin-bottom:8px}
+  .rev-spk{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:100px;border:1px solid rgba(240,165,0,.4);background:rgba(240,165,0,.08);color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;margin-bottom:8px}
+  .rev-reveal{padding:11px 24px;border-radius:12px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:6px}
+  .rev-mean{color:var(--mut);font-size:15px;margin:14px 0 6px;line-height:1.5}
+  .rev-ex{font-family:'Fraunces',serif;font-style:italic;font-size:15px;color:var(--tx);margin-bottom:18px}
+  .rev-rate{display:flex;gap:8px;margin-top:14px}
+  .rev-rate button{flex:1;padding:12px 0;border-radius:12px;border:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .rate-hard{background:rgba(224,90,90,.2);color:var(--red);border:1px solid rgba(224,90,90,.4)!important}
+  .rate-ok{background:rgba(240,165,0,.18);color:var(--gold);border:1px solid rgba(240,165,0,.4)!important}
+  .rate-easy{background:rgba(79,195,161,.18);color:var(--grn);border:1px solid rgba(79,195,161,.4)!important}
+  .rev-done{text-align:center;padding:50px 20px}
+  .rev-done .big{font-size:46px;margin-bottom:12px}
+  .rev-done h3{font-family:'Fraunces',serif;font-size:22px;margin-bottom:8px}
+  .rev-done p{color:var(--mut);font-size:14px;line-height:1.6}
+  .rev-add{margin-top:18px;padding:11px 22px;border-radius:10px;border:1px solid rgba(123,140,255,.4);background:rgba(123,140,255,.1);color:var(--pur);font-weight:700;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+  /* method guide */
+  .method-sec{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;margin-bottom:12px;position:relative;overflow:hidden}
+  .method-sec::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--mc,var(--gold))}
+  .method-sec h3{font-family:'Fraunces',serif;font-size:17px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+  .method-sec p{color:var(--mut);font-size:13px;line-height:1.65}
+  .method-sec b{color:var(--tx)}
+  .method-hero{text-align:center;margin-bottom:18px}
+  .method-hero h2{font-family:'Fraunces',serif;font-size:24px;margin-bottom:6px}
+  .method-hero p{color:var(--mut);font-size:13px}
   .speak-unsupported{display:none;color:var(--red);font-size:12px;text-align:center;margin-bottom:10px}
 
   /* dialogues */
@@ -172,11 +211,13 @@
 
   <div class="tabs" id="tabs">
     <button class="tab on" data-p="plan">📅 Daily Plan</button>
+    <button class="tab" data-p="review">🔁 Review <span class="due-count" id="dueCount"></span></button>
     <button class="tab" data-p="week">✅ Week Tracker</button>
     <button class="tab" data-p="vocab">📚 Common Words</button>
     <button class="tab" data-p="dialogues">💬 Dialogues</button>
     <button class="tab" data-p="quiz">🧠 Quiz</button>
-    <button class="tab" data-p="grammar">🔧 Grammar Path</button>
+    <button class="tab" data-p="grammar">🔧 Grammar</button>
+    <button class="tab" data-p="method">🎓 How to Learn</button>
   </div>
 
   <!-- DAILY PLAN -->
@@ -257,9 +298,20 @@
     <div id="quizBox"></div>
   </div>
 
+  <!-- REVIEW (spaced repetition) -->
+  <div class="panel" id="p-review">
+    <p class="sub" style="margin-bottom:14px">Spaced repetition — the proven way to remember words forever. Review what's due today, rate how well you knew each one.</p>
+    <div id="reviewBox"></div>
+  </div>
+
+  <!-- METHOD GUIDE -->
+  <div class="panel" id="p-method">
+    <div id="methodBox"></div>
+  </div>
+
   <!-- GRAMMAR -->
   <div class="panel" id="p-grammar">
-    <p class="sub" style="margin-bottom:16px">The grammar you must master to move from A2 to B2, in the right order.</p>
+    <p class="sub" style="margin-bottom:16px">The grammar you must master to move from A2 to B2, in the right order. Tap 🎤 to say the example and get checked.</p>
     <div id="gramList"></div>
   </div>
 
@@ -640,6 +692,8 @@ document.getElementById('tabs').addEventListener('click',e=>{
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+b.dataset.p).classList.add('on');
   if(b.dataset.p==='quiz') newQuiz();
+  if(b.dataset.p==='review') startReview();
+  if(b.dataset.p==='method') renderMethod();
 });
 
 /* ---------- VOCAB ---------- */
@@ -661,6 +715,7 @@ function renderVocab(){
         <div class="vex-txt">"${v.ex}"</div>
         <button class="vex-speak" data-sp="${i}-e">🔊</button>
       </div>
+      <button class="vlearn ${srs[v.w]?'added':''}" data-learn="${i}">${srs[v.w]?'✓ In Review':'+ Add to Review'}</button>
       <div class="mic-input-wrap" id="miw-${i}" style="display:none">
         <input class="mic-input" id="min-${i}" placeholder="Say it with keyboard 🎤, then Check…" autocapitalize="none" autocomplete="off">
         <button class="mic-check" data-check="${i}">Check</button>
@@ -678,6 +733,14 @@ document.getElementById('vsearch').addEventListener('input',function(){
   searchTerm=this.value.trim(); renderVocab();
 });
 document.getElementById('vocabList').addEventListener('click',e=>{
+  const learn=e.target.closest('[data-learn]');
+  if(learn){
+    const v=VOCAB[curLevel][+learn.dataset.learn];
+    if(srs[v.w]){ delete srs[v.w]; saveSRS(); }
+    else { srsAdd(v.w); }
+    renderVocab(); updateDueBadge();
+    return;
+  }
   const mic=e.target.closest('[data-mic]');
   if(mic){
     const i=+mic.dataset.mic;
@@ -705,8 +768,21 @@ document.getElementById('gramList').innerHTML=GRAMMAR.map((g,i)=>`
   <div class="grambox">
     <h4>${i+1}. ${g.t}</h4>
     <p>${g.d}</p>
-    <div class="eg">e.g. ${g.e}</div>
+    <div class="eg">e.g. ${g.e}
+      <div class="gram-btns">
+        <button class="gram-spk" data-gspk="${i}">🔊</button>
+        <button class="gram-mic" data-gmic="${i}">🎤 Say it</button>
+      </div>
+      <div class="mic-result" id="gres-${i}"></div>
+    </div>
   </div>`).join('');
+document.getElementById('gramList').addEventListener('click',e=>{
+  const spk=e.target.closest('[data-gspk]');
+  if(spk){ speak(GRAMMAR[+spk.dataset.gspk].e, spk); return; }
+  const mic=e.target.closest('[data-gmic]');
+  if(mic){ const i=+mic.dataset.gmic;
+    startListening(GRAMMAR[i].e, mic, document.getElementById('gres-'+i), null); return; }
+});
 
 /* ---------- WEEK TRACKER ---------- */
 const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
@@ -796,6 +872,115 @@ function playWholeDialogue(btn){
   next();
 }
 
+/* ---------- SPACED REPETITION SYSTEM (SRS) ---------- */
+// Intervals in days for each "box" level (Leitner system)
+const SRS_INTERVALS=[1,3,7,14,30,90];
+let srs=JSON.parse(localStorage.getItem('srs')||'{}'); // {word:{level,due}}
+
+function saveSRS(){ localStorage.setItem('srs',JSON.stringify(srs)); }
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+
+function srsAdd(word){
+  if(!srs[word]){ srs[word]={level:0, due:todayStr()}; saveSRS(); } // due today for first review
+}
+function srsRate(word, quality){
+  // quality: 'hard'=reset, 'ok'=+1 level, 'easy'=+2 levels
+  let e=srs[word]||{level:0,due:todayStr()};
+  if(quality==='hard') e.level=0;
+  else if(quality==='ok') e.level=Math.min(e.level+1, SRS_INTERVALS.length-1);
+  else e.level=Math.min(e.level+2, SRS_INTERVALS.length-1);
+  e.due=addDays(SRS_INTERVALS[e.level]);
+  srs[word]=e; saveSRS();
+}
+function getDueWords(){
+  const all=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect];
+  const t=todayStr();
+  return all.filter(v=>srs[v.w] && srs[v.w].due<=t);
+}
+function getAllTracked(){ return Object.keys(srs).length; }
+
+function updateDueBadge(){
+  const n=getDueWords().length;
+  const b=document.getElementById('dueCount');
+  if(n>0){ b.textContent=n; b.classList.add('show'); }
+  else { b.classList.remove('show'); }
+}
+
+let reviewQueue=[], reviewIdx=0, reviewRevealed=false;
+function startReview(){
+  reviewQueue=getDueWords();
+  reviewIdx=0; reviewRevealed=false;
+  renderReview();
+}
+function renderReview(){
+  const box=document.getElementById('reviewBox');
+  if(!reviewQueue.length){
+    const tracked=getAllTracked();
+    box.innerHTML='<div class="rev-done"><div class="big">🎉</div>'+
+      '<h3>'+(tracked? 'All caught up!':'No words yet')+'</h3>'+
+      '<p>'+(tracked
+        ? 'You have no words due for review today. Come back tomorrow, or add more from the Common Words tab (tap <b>+ Learn</b>).'
+        : 'Go to <b>Common Words</b> and tap <b>+ Learn</b> on words you want to remember. They\'ll appear here on a smart schedule.')+'</p>'+
+      '<button class="rev-add" onclick="document.querySelector(\'[data-p=vocab]\').click()">Go to Common Words →</button></div>';
+    return;
+  }
+  if(reviewIdx>=reviewQueue.length){
+    box.innerHTML='<div class="rev-done"><div class="big">✅</div><h3>Review complete!</h3>'+
+      '<p>Great work. You reviewed <b>'+reviewQueue.length+'</b> word'+(reviewQueue.length>1?'s':'')+' today. '+
+      'Each word will come back at the perfect time to lock it into memory.</p></div>';
+    updateDueBadge();
+    return;
+  }
+  const v=reviewQueue[reviewIdx];
+  box.innerHTML='<div class="rev-card">'+
+    '<div class="rev-progress">Card '+(reviewIdx+1)+' / '+reviewQueue.length+'</div>'+
+    '<div class="rev-word">'+v.w+'</div>'+
+    '<button class="rev-spk" onclick="speak('+JSON.stringify(v.w).replace(/"/g,'&quot;')+', this)">🔊 Hear it</button>'+
+    '<div>'+
+    (reviewRevealed
+      ? '<div class="rev-mean">'+v.m+' · <i>'+v.pos+'</i></div><div class="rev-ex">"'+v.ex+'"</div>'+
+        '<div class="rev-progress">How well did you know it?</div>'+
+        '<div class="rev-rate">'+
+          '<button class="rate-hard" data-rate="hard">😟 Hard</button>'+
+          '<button class="rate-ok" data-rate="ok">🙂 OK</button>'+
+          '<button class="rate-easy" data-rate="easy">😎 Easy</button>'+
+        '</div>'
+      : '<button class="rev-reveal" onclick="revealReview()">Show meaning</button>')+
+    '</div></div>';
+}
+function revealReview(){ reviewRevealed=true; renderReview(); }
+document.getElementById('reviewBox').addEventListener('click',e=>{
+  const r=e.target.closest('[data-rate]'); if(!r) return;
+  const v=reviewQueue[reviewIdx];
+  srsRate(v.w, r.dataset.rate);
+  reviewIdx++; reviewRevealed=false;
+  renderReview();
+});
+
+/* ---------- METHOD GUIDE ---------- */
+const METHOD=[
+  {c:'#f0a500', i:'🎧', h:'1. Comprehensible Input', p:'You learn most by <b>understanding</b> things slightly above your level — where you get about 80–90% and stretch for the rest. Listen and read a lot. Input matters more than output, especially early on.'},
+  {c:'#4fc3a1', i:'🔁', h:'2. Spaced Repetition', p:'A word seen once is forgotten. Reviewed at growing intervals (1 → 3 → 7 → 30 days) it sticks for life. Use the <b>Review</b> tab daily — it\'s the highest-impact habit you can build.'},
+  {c:'#7b8cff', i:'🧠', h:'3. Active Recall', p:'Testing yourself beats re-reading by far. Every time you struggle to remember, the memory gets stronger. Use the <b>Quiz</b> and cover the meaning before revealing it.'},
+  {c:'#e05a5a', i:'🗣️', h:'4. Speak & Get Corrected', p:'Shadowing and speaking aloud turn passive knowledge into real fluency. Use the <b>🎤 mic</b> every day. Don\'t fear mistakes — they are how the brain learns.'},
+  {c:'#5aa9e0', i:'🧩', h:'5. Learn Chunks, Not Words', p:'Fluency comes from phrases — "take into account", "as far as I\'m concerned" — not isolated words. Focus on the <b>Linking Words</b> and <b>Dialogues</b>.'},
+  {c:'#f0a500', i:'📅', h:'6. Consistency Wins', p:'1 hour daily beats 7 hours once a week. Short, calm, regular sessions. Keep anxiety low — relaxed learners absorb faster.'},
+];
+function renderMethod(){
+  document.getElementById('methodBox').innerHTML=
+    '<div class="method-hero"><h2>🎓 How to Reach B2</h2><p>The science of learning English, in 6 principles</p></div>'+
+    METHOD.map(m=>'<div class="method-sec" style="--mc:'+m.c+'"><h3>'+m.i+' '+m.h+'</h3><p>'+m.p+'</p></div>').join('')+
+    '<div class="tipbox"><h3>⏱️ Your refined daily hour</h3><ul>'+
+      '<li><b>5 min</b> — Review yesterday\'s words (Review tab) — the most important 5 minutes</li>'+
+      '<li><b>15 min</b> — Listen to something at your level (eyes + ears)</li>'+
+      '<li><b>10 min</b> — Learn 7–10 new chunks, said aloud</li>'+
+      '<li><b>15 min</b> — Shadow a dialogue + mic practice</li>'+
+      '<li><b>10 min</b> — Read a short text, add new words to Review</li>'+
+      '<li><b>5 min</b> — Say or write 3 sentences about your day</li>'+
+    '</ul></div>';
+}
+
 /* ---------- WORD OF THE DAY ---------- */
 function renderWOTD(){
   const all=[...VOCAB.a2b1, ...VOCAB.b1b2];
@@ -810,43 +995,62 @@ function renderWOTD(){
     '<div class="wotd-ex">"'+v.ex+'"</div>';
 }
 
-/* ---------- QUIZ ---------- */
+/* ---------- QUIZ (multiple types) ---------- */
 let quizStats=JSON.parse(localStorage.getItem('quiz_stats')||'{"correct":0,"total":0}');
 let quizCurrent=null;
+const QUIZ_TYPES=['meaning','reverse','audio','gap'];
+
 function newQuiz(){
-  const pool=[...VOCAB.a2b1, ...VOCAB.b1b2];
+  const pool=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect];
+  const type=QUIZ_TYPES[Math.floor(Math.random()*QUIZ_TYPES.length)];
   const correct=pool[Math.floor(Math.random()*pool.length)];
-  // 3 wrong meanings
   const others=pool.filter(x=>x.w!==correct.w).sort(()=>Math.random()-0.5).slice(0,3);
-  const opts=[correct,...others].sort(()=>Math.random()-0.5);
-  quizCurrent={correct,opts};
+  quizCurrent={type,correct,opts:[correct,...others].sort(()=>Math.random()-0.5)};
   renderQuiz(false);
 }
 function renderQuiz(answered, chosen){
-  const {correct,opts}=quizCurrent;
-  document.getElementById('quizScore').innerHTML='Score: <b>'+quizStats.correct+'</b> / '+quizStats.total;
+  const {type,correct,opts}=quizCurrent;
+  document.getElementById('quizScore').innerHTML='Score: <b>'+quizStats.correct+'</b> / '+quizStats.total+
+    (quizStats.total?' · '+Math.round(quizStats.correct/quizStats.total*100)+'%':'');
+
+  let q, stem, optText;
+  if(type==='meaning'){
+    q='What does this word mean?'; stem='<div class="quiz-word">'+correct.w+'</div>'+spkBtn(correct.w);
+    optText=(o)=>o.m;
+  } else if(type==='reverse'){
+    q='Which word means this?'; stem='<div class="quiz-word" style="font-size:18px;font-style:italic">"'+correct.m+'"</div>';
+    optText=(o)=>o.w;
+  } else if(type==='audio'){
+    q='Listen 🔊 and choose the word you hear'; stem='<button class="quiz-spk" onclick="speak('+JSON.stringify(correct.w).replace(/"/g,'&quot;')+', this)">🔊 Play word</button>';
+    optText=(o)=>o.w;
+  } else { // gap
+    q='Complete the sentence'; 
+    const gapped=correct.ex.replace(new RegExp(correct.w,'i'),'_____');
+    stem='<div class="quiz-word" style="font-size:17px">'+gapped+'</div>';
+    optText=(o)=>o.w;
+  }
+
   let html='<div class="quiz-card">'+
-    '<div class="quiz-q">What does this word mean?</div>'+
-    '<div class="quiz-word">'+correct.w+'</div>'+
-    '<button class="quiz-spk" onclick="speak('+JSON.stringify(correct.w).replace(/"/g,'&quot;')+', this)">🔊 Hear it</button>'+
-    '<div class="quiz-opts">';
+    '<div class="quiz-q">'+q+'</div>'+stem+'<div class="quiz-opts" style="margin-top:18px">';
   opts.forEach((o,i)=>{
     let cls='quiz-opt';
     if(answered){
       if(o.w===correct.w) cls+=' correct';
       else if(chosen && o.w===chosen.w) cls+=' wrong';
     }
-    html+='<button class="'+cls+'" '+(answered?'disabled':'data-qi="'+i+'"')+'>'+o.m+'</button>';
+    html+='<button class="'+cls+'" '+(answered?'disabled':'data-qi="'+i+'"')+'>'+optText(o)+'</button>';
   });
   html+='</div>';
   if(answered){
     const right=chosen.w===correct.w;
-    html+='<div class="quiz-fb '+(right?'ok':'no')+'">'+(right?'✅ Correct!':'❌ It was: '+correct.m)+'</div>';
+    html+='<div class="quiz-fb '+(right?'ok':'no')+'">'+(right?'✅ Correct!':'❌ Answer: '+correct.w+' — '+correct.m)+'</div>';
     html+='<button class="quiz-next" onclick="newQuiz()">Next →</button>';
   }
   html+='</div>';
   document.getElementById('quizBox').innerHTML=html;
 }
+function spkBtn(w){ return '<button class="quiz-spk" onclick="speak('+JSON.stringify(w).replace(/"/g,'&quot;')+', this)">🔊 Hear it</button>'; }
+
 document.getElementById('quizBox').addEventListener('click',e=>{
   const b=e.target.closest('[data-qi]'); if(!b) return;
   const chosen=quizCurrent.opts[+b.dataset.qi];
@@ -866,6 +1070,7 @@ function matchSearch(v){
 
 renderWOTD(); newQuiz();
 renderVocab(); renderWeek(); renderDiaPick(); renderDia();
+updateDueBadge(); renderMethod();
 </script>
 </body>
 </html>
