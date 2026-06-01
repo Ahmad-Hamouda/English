@@ -96,6 +96,41 @@
   .grambox .eg{color:var(--tx);font-style:italic;margin-top:6px;font-size:13px}
 
   footer{text-align:center;color:var(--mut);font-size:12px;padding:24px 0 0;border-top:1px solid var(--bd);margin-top:20px}
+
+  /* word of the day */
+  .wotd{background:linear-gradient(135deg,rgba(240,165,0,.14),rgba(123,140,255,.1));border:1px solid rgba(240,165,0,.3);border-radius:16px;padding:16px 18px;margin-bottom:14px}
+  .wotd-label{font-size:10px;color:var(--gold);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .wotd-word{font-family:'Fraunces',serif;font-size:24px;font-weight:700;display:flex;align-items:center;gap:10px}
+  .wotd-spk{width:36px;height:32px;border-radius:9px;border:1px solid rgba(240,165,0,.4);background:var(--surf);color:var(--gold);font-size:14px;cursor:pointer}
+  .wotd-mean{color:var(--mut);font-size:13px;margin-top:6px}
+  .wotd-ex{font-family:'Fraunces',serif;font-style:italic;font-size:14px;margin-top:6px;color:var(--tx)}
+
+  /* quiz */
+  .quiz-score{text-align:center;font-size:13px;color:var(--mut);margin-bottom:14px}
+  .quiz-score b{color:var(--gold)}
+  .quiz-card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:22px 18px;text-align:center}
+  .quiz-q{font-size:13px;color:var(--mut);margin-bottom:10px;letter-spacing:1px;text-transform:uppercase}
+  .quiz-word{font-family:'Fraunces',serif;font-size:26px;font-weight:700;margin-bottom:6px}
+  .quiz-spk{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;border-radius:100px;border:1px solid rgba(240,165,0,.4);background:rgba(240,165,0,.08);color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:18px;font-family:'DM Sans',sans-serif}
+  .quiz-opts{display:flex;flex-direction:column;gap:10px}
+  .quiz-opt{padding:13px 16px;border-radius:12px;border:1px solid var(--bd);background:var(--surf);color:var(--tx);font-size:14px;cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;transition:all .15s}
+  .quiz-opt:hover{border-color:var(--pur)}
+  .quiz-opt.correct{background:rgba(79,195,161,.18);border-color:var(--grn);color:var(--grn);font-weight:600}
+  .quiz-opt.wrong{background:rgba(224,90,90,.15);border-color:var(--red);color:var(--red)}
+  .quiz-next{margin-top:16px;padding:13px 28px;border-radius:12px;border:none;background:var(--gold);color:#000;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .quiz-fb{margin-top:12px;font-size:14px;font-weight:600;min-height:20px}
+  .quiz-fb.ok{color:var(--grn)} .quiz-fb.no{color:var(--red)}
+
+  /* global search */
+  .search-wrap{position:relative;margin-bottom:16px}
+  .search-input{width:100%;box-sizing:border-box;background:var(--surf);border:1px solid var(--bd);color:var(--tx);border-radius:12px;padding:12px 14px 12px 40px;font-size:15px;font-family:'DM Sans',sans-serif;outline:none}
+  .search-input:focus{border-color:var(--gold)}
+  .search-ico{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--mut)}
+
+  /* review-due badge on vocab */
+  .due-badge{background:rgba(224,90,90,.15);border:1px solid rgba(224,90,90,.35);color:var(--red);font-size:9px;padding:1px 7px;border-radius:100px;letter-spacing:1px;margin-left:4px}
+  .review-bar{display:flex;gap:6px;margin-bottom:14px}
+  .review-btn{flex:1;padding:10px 0;border-radius:10px;border:1px solid rgba(79,195,161,.35);background:rgba(79,195,161,.08);color:var(--grn);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
   .speak-unsupported{display:none;color:var(--red);font-size:12px;text-align:center;margin-bottom:10px}
 
   /* dialogues */
@@ -140,11 +175,13 @@
     <button class="tab" data-p="week">✅ Week Tracker</button>
     <button class="tab" data-p="vocab">📚 Common Words</button>
     <button class="tab" data-p="dialogues">💬 Dialogues</button>
+    <button class="tab" data-p="quiz">🧠 Quiz</button>
     <button class="tab" data-p="grammar">🔧 Grammar Path</button>
   </div>
 
   <!-- DAILY PLAN -->
   <div class="panel on" id="p-plan">
+    <div class="wotd" id="wotd"></div>
     <div class="block" style="--bc:var(--gold)">
       <div class="block-h"><span class="block-icon">📚</span><span class="block-title">Vocabulary</span><span class="block-time">15 min</span></div>
       <div class="block-desc">Learn <b>10 new words</b> from the Common Words tab. Say each word and its example sentence <b>out loud 3 times</b>. Write one new sentence of your own using each word.</div>
@@ -191,6 +228,10 @@
 
   <!-- VOCAB -->
   <div class="panel" id="p-vocab">
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input class="search-input" id="vsearch" placeholder="Search any word, meaning, or example…" autocomplete="off">
+    </div>
     <div class="levelpick" id="levelpick">
       <button class="lp on" data-l="a2b1">A2 → B1 core</button>
       <button class="lp" data-l="b1b2">B1 → B2 core</button>
@@ -207,6 +248,13 @@
     <div class="levelpick" id="diapick"></div>
     <p class="ttsnote">🔊 hear a line · 🎤 tap & speak → instant check · 🎬 play all</p>
     <div id="diaList"></div>
+  </div>
+
+  <!-- QUIZ -->
+  <div class="panel" id="p-quiz">
+    <p class="sub" style="margin-bottom:14px">Test yourself! Listen or read, then pick the correct meaning. Your score is saved.</p>
+    <div class="quiz-score" id="quizScore"></div>
+    <div id="quizBox"></div>
   </div>
 
   <!-- GRAMMAR -->
@@ -410,6 +458,51 @@ const DIALOGUES = [
     {who:"Agent", side:"a", t:"Your gate is B12 and boarding starts at 10:30."},
     {who:"You", side:"b", t:"Perfect. Could you tell me where the gate is?"},
   ]},
+  { id:"doctor", title:"🩺 At the Doctor", level:"B1", lines:[
+    {who:"Doctor", side:"a", t:"Good morning. What seems to be the problem?"},
+    {who:"You", side:"b", t:"I've had a sore throat and a headache for three days."},
+    {who:"Doctor", side:"a", t:"Do you have a fever as well?"},
+    {who:"You", side:"b", t:"Yes, a slight one, especially at night."},
+    {who:"Doctor", side:"a", t:"Let me take a look. Open your mouth, please."},
+    {who:"You", side:"b", t:"Is it something serious?"},
+    {who:"Doctor", side:"a", t:"No, it's just a throat infection. I'll prescribe some medicine."},
+    {who:"You", side:"b", t:"Thank you. How often should I take it?"},
+    {who:"Doctor", side:"a", t:"Twice a day, after meals, for one week."},
+    {who:"You", side:"b", t:"Got it. Thanks a lot, doctor."},
+  ]},
+  { id:"restaurant", title:"🍽️ At a Restaurant", level:"B1", lines:[
+    {who:"Waiter", side:"a", t:"Good evening. Are you ready to order?"},
+    {who:"You", side:"b", t:"Almost. What would you recommend?"},
+    {who:"Waiter", side:"a", t:"The grilled salmon is very popular tonight."},
+    {who:"You", side:"b", t:"That sounds great. I'll have that, please."},
+    {who:"Waiter", side:"a", t:"Would you like anything to drink?"},
+    {who:"You", side:"b", t:"Just water for now, thank you."},
+    {who:"Waiter", side:"a", t:"Of course. I'll bring your order shortly."},
+    {who:"You", side:"b", t:"Excuse me, could I have the bill when you have a moment?"},
+  ]},
+  { id:"phone", title:"📞 A Phone Call", level:"B2", lines:[
+    {who:"Caller", side:"a", t:"Hello, this is Sara from the support team. Is this a good time?"},
+    {who:"You", side:"b", t:"Yes, go ahead. How can I help?"},
+    {who:"Caller", side:"a", t:"I'm calling to follow up on the issue you reported."},
+    {who:"You", side:"b", t:"Right, has it been resolved?"},
+    {who:"Caller", side:"a", t:"Almost. We just need to confirm a few details with you."},
+    {who:"You", side:"b", t:"Sure, let me know what you need."},
+    {who:"Caller", side:"a", t:"Could you confirm the email address on your account?"},
+    {who:"You", side:"b", t:"Of course. Let me spell it out for you."},
+    {who:"Caller", side:"a", t:"Perfect. I'll get this sorted and call you back."},
+    {who:"You", side:"b", t:"I appreciate it. Thanks for letting me know."},
+  ]},
+  { id:"complaint", title:"😤 Making a Complaint", level:"B2", lines:[
+    {who:"You", side:"b", t:"Hi, I'd like to report a problem with my recent order."},
+    {who:"Staff", side:"a", t:"I'm sorry to hear that. What seems to be the issue?"},
+    {who:"You", side:"b", t:"The item arrived damaged, and one part is missing."},
+    {who:"Staff", side:"a", t:"I sincerely apologize for the inconvenience."},
+    {who:"You", side:"b", t:"I'd appreciate it if this could be sorted out quickly."},
+    {who:"Staff", side:"a", t:"Absolutely. We'll send a replacement right away."},
+    {who:"You", side:"b", t:"Thank you. And will I be charged again?"},
+    {who:"Staff", side:"a", t:"No, there's no extra charge. Again, I'm very sorry."},
+    {who:"You", side:"b", t:"That's alright. I appreciate your help."},
+  ]},
 ];
 
 const GRAMMAR = [
@@ -546,13 +639,16 @@ document.getElementById('tabs').addEventListener('click',e=>{
   b.classList.add('on');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+b.dataset.p).classList.add('on');
+  if(b.dataset.p==='quiz') newQuiz();
 });
 
 /* ---------- VOCAB ---------- */
 let curLevel='a2b1';
 function renderVocab(){
   const list=document.getElementById('vocabList');
-  list.innerHTML=VOCAB[curLevel].map((v,i)=>`
+  list.innerHTML=VOCAB[curLevel].map((v,i)=>{
+    if(!matchSearch(v)) return '';
+    return `
     <div class="vrow">
       <div class="vtop">
         <span class="vword">${v.w}</span>
@@ -570,12 +666,16 @@ function renderVocab(){
         <button class="mic-check" data-check="${i}">Check</button>
       </div>
       <div class="mic-result" id="mres-${i}"></div>
-    </div>`).join('');
+    </div>`;
+  }).join('') || '<p class="sub" style="text-align:center;padding:30px 0">No words match your search.</p>';
 }
 document.getElementById('levelpick').addEventListener('click',e=>{
   const b=e.target.closest('.lp'); if(!b) return;
   document.querySelectorAll('.lp').forEach(x=>x.classList.remove('on'));
   b.classList.add('on'); curLevel=b.dataset.l; renderVocab();
+});
+document.getElementById('vsearch').addEventListener('input',function(){
+  searchTerm=this.value.trim(); renderVocab();
 });
 document.getElementById('vocabList').addEventListener('click',e=>{
   const mic=e.target.closest('[data-mic]');
@@ -696,6 +796,75 @@ function playWholeDialogue(btn){
   next();
 }
 
+/* ---------- WORD OF THE DAY ---------- */
+function renderWOTD(){
+  const all=[...VOCAB.a2b1, ...VOCAB.b1b2];
+  // pick based on day of year so it changes daily but is stable per day
+  const now=new Date();
+  const dayNum=Math.floor((now - new Date(now.getFullYear(),0,0))/86400000);
+  const v=all[dayNum % all.length];
+  document.getElementById('wotd').innerHTML=
+    '<div class="wotd-label">⭐ Word of the Day</div>'+
+    '<div class="wotd-word">'+v.w+' <button class="wotd-spk" onclick="speak('+JSON.stringify(v.w).replace(/"/g,'&quot;')+', this)">🔊</button></div>'+
+    '<div class="wotd-mean">'+v.m+' · <i>'+v.pos+'</i></div>'+
+    '<div class="wotd-ex">"'+v.ex+'"</div>';
+}
+
+/* ---------- QUIZ ---------- */
+let quizStats=JSON.parse(localStorage.getItem('quiz_stats')||'{"correct":0,"total":0}');
+let quizCurrent=null;
+function newQuiz(){
+  const pool=[...VOCAB.a2b1, ...VOCAB.b1b2];
+  const correct=pool[Math.floor(Math.random()*pool.length)];
+  // 3 wrong meanings
+  const others=pool.filter(x=>x.w!==correct.w).sort(()=>Math.random()-0.5).slice(0,3);
+  const opts=[correct,...others].sort(()=>Math.random()-0.5);
+  quizCurrent={correct,opts};
+  renderQuiz(false);
+}
+function renderQuiz(answered, chosen){
+  const {correct,opts}=quizCurrent;
+  document.getElementById('quizScore').innerHTML='Score: <b>'+quizStats.correct+'</b> / '+quizStats.total;
+  let html='<div class="quiz-card">'+
+    '<div class="quiz-q">What does this word mean?</div>'+
+    '<div class="quiz-word">'+correct.w+'</div>'+
+    '<button class="quiz-spk" onclick="speak('+JSON.stringify(correct.w).replace(/"/g,'&quot;')+', this)">🔊 Hear it</button>'+
+    '<div class="quiz-opts">';
+  opts.forEach((o,i)=>{
+    let cls='quiz-opt';
+    if(answered){
+      if(o.w===correct.w) cls+=' correct';
+      else if(chosen && o.w===chosen.w) cls+=' wrong';
+    }
+    html+='<button class="'+cls+'" '+(answered?'disabled':'data-qi="'+i+'"')+'>'+o.m+'</button>';
+  });
+  html+='</div>';
+  if(answered){
+    const right=chosen.w===correct.w;
+    html+='<div class="quiz-fb '+(right?'ok':'no')+'">'+(right?'✅ Correct!':'❌ It was: '+correct.m)+'</div>';
+    html+='<button class="quiz-next" onclick="newQuiz()">Next →</button>';
+  }
+  html+='</div>';
+  document.getElementById('quizBox').innerHTML=html;
+}
+document.getElementById('quizBox').addEventListener('click',e=>{
+  const b=e.target.closest('[data-qi]'); if(!b) return;
+  const chosen=quizCurrent.opts[+b.dataset.qi];
+  quizStats.total++;
+  if(chosen.w===quizCurrent.correct.w) quizStats.correct++;
+  localStorage.setItem('quiz_stats',JSON.stringify(quizStats));
+  renderQuiz(true, chosen);
+});
+
+/* ---------- GLOBAL SEARCH (in vocab tab) ---------- */
+let searchTerm='';
+function matchSearch(v){
+  if(!searchTerm) return true;
+  const q=searchTerm.toLowerCase();
+  return v.w.toLowerCase().includes(q)||v.m.toLowerCase().includes(q)||v.ex.toLowerCase().includes(q);
+}
+
+renderWOTD(); newQuiz();
 renderVocab(); renderWeek(); renderDiaPick(); renderDia();
 </script>
 </body>
