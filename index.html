@@ -75,8 +75,18 @@
   .mic-result.show{display:block}
   .mic-result .ok{color:var(--grn);font-weight:700}
   .mic-result .bad{color:var(--red);font-weight:700}
+  .mic-result .close{color:var(--gold);font-weight:700}
   .mic-result .heard{color:var(--mut)}
   .mic-result .heard b{color:var(--tx)}
+  /* voice settings */
+  .voice-box{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:13px 14px;margin-bottom:14px}
+  .voice-box label{display:block;font-size:11px;color:var(--mut);font-weight:600;letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px}
+  .voice-select{width:100%;box-sizing:border-box;background:var(--surf);border:1px solid var(--bd);color:var(--tx);border-radius:9px;padding:9px 11px;font-size:13px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:10px}
+  .voice-select:focus{border-color:var(--gold)}
+  .speed-row{display:flex;gap:6px}
+  .speed-btn{flex:1;padding:8px 0;border-radius:8px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .speed-btn.on{background:var(--gold);border-color:var(--gold);color:#0d0f14}
+  .voice-test{margin-top:10px;width:100%;padding:9px 0;border-radius:9px;border:1px solid rgba(240,165,0,.4);background:rgba(240,165,0,.08);color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif}
   .mic-input-wrap{display:flex;gap:6px;margin-top:9px}
   .mic-input{flex:1;min-width:0;background:var(--surf);border:1px solid rgba(123,140,255,.4);color:var(--tx);border-radius:9px;padding:9px 11px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none}
   .mic-input:focus{border-color:var(--pur)}
@@ -348,6 +358,7 @@
 
   <!-- VOCAB -->
   <div class="panel" id="p-vocab">
+    <div class="voice-box" id="voiceBox"></div>
     <div class="search-wrap">
       <span class="search-ico">🔍</span>
       <input class="search-input" id="vsearch" placeholder="Search any word, meaning, or example…" autocomplete="off">
@@ -649,32 +660,55 @@ const GRAMMAR = [
   {t:"Present Perfect Continuous", d:"For ongoing actions up to now — a B2 marker.", e:"I have been studying for two hours."},
 ];
 
-/* ---------- TTS (offline, US English, male preferred) ---------- */
-let rate=0.8, speakingTxt=null, activeBtn=null;
+/* ---------- TTS (best available voice, user-selectable, speed control) ---------- */
+let rate=parseFloat(localStorage.getItem('tts_rate')||'0.85');
+let speakingTxt=null, activeBtn=null;
 let usMaleVoice=null;
+let allVoices=[];
+let savedVoiceName=localStorage.getItem('tts_voice')||'';
 
+// score a voice for quality: higher = better
+function voiceScore(v){
+  const name=(v.name||'').toLowerCase();
+  const lang=(v.lang||'').toLowerCase();
+  let s=0;
+  if(lang==='en-us') s+=40; else if(lang.startsWith('en')) s+=20;
+  // network/natural voices sound far better than compact local ones
+  if(!v.localService) s+=25;                                  // online/natural voice
+  if(name.includes('natural')||name.includes('neural')||name.includes('wavenet')) s+=30;
+  if(name.includes('google')) s+=15;                          // Google US English is good
+  if(name.includes('enhanced')||name.includes('premium')) s+=12;
+  // prefer male-sounding names (your preference)
+  const maleNames=['male','david','mark','mike','matthew','guy','eric','aaron','fred','alex','tom','james','daniel','christopher','john'];
+  if(maleNames.some(n=>name.includes(n))) s+=10;
+  return s;
+}
+function rankedEnglishVoices(){
+  return allVoices
+    .filter(v=>(v.lang||'').toLowerCase().startsWith('en'))
+    .sort((a,b)=>voiceScore(b)-voiceScore(a));
+}
 function pickUSMaleVoice(){
-  const all=window.speechSynthesis.getVoices();
-  // 1) only US English voices
-  let us=all.filter(v=>(v.lang||'').toLowerCase()==='en-us');
-  if(!us.length) us=all.filter(v=>(v.lang||'').toLowerCase().startsWith('en')); // fallback any English
-  // 2) prefer ones whose name signals "male"
-  const maleNames=['male','David','Mark','Mike','Matthew','Guy','Eric','Aaron','Fred','Alex','Tom','James','Daniel','Google US English'];
-  let male=us.find(v=>maleNames.some(n=>v.name.toLowerCase().includes(n.toLowerCase())));
-  // 'Google US English' is the default Android US voice (works well)
-  usMaleVoice = male || us[0] || all[0] || null;
+  allVoices=window.speechSynthesis.getVoices();
+  // honor saved choice if still available
+  if(savedVoiceName){
+    const saved=allVoices.find(v=>v.name===savedVoiceName);
+    if(saved){ usMaleVoice=saved; return; }
+  }
+  const ranked=rankedEnglishVoices();
+  usMaleVoice = ranked[0] || allVoices[0] || null;
 }
 
 function clearBtn(){ if(activeBtn){activeBtn.classList.remove('sp');} activeBtn=null; speakingTxt=null; }
 
 function speak(text, btn){
-  if(!('speechSynthesis' in window)){ document.getElementById('ttsUnsupported').style.display='block'; return; }
+  if(!('speechSynthesis' in window)){ const u=document.getElementById('ttsUnsupported'); if(u)u.style.display='block'; return; }
   if(speakingTxt===text){ window.speechSynthesis.cancel(); clearBtn(); return; }
   window.speechSynthesis.cancel(); clearBtn();
   speakingTxt=text; activeBtn=btn; if(btn) btn.classList.add('sp');
   if(!usMaleVoice) pickUSMaleVoice();
   const u=new SpeechSynthesisUtterance(text);
-  u.lang='en-US'; u.rate=rate; u.pitch=0.9;          // slightly lower pitch = more male sound
+  u.lang='en-US'; u.rate=rate; u.pitch=0.95;
   if(usMaleVoice) u.voice=usMaleVoice;
   u.onend=()=>clearBtn();
   u.onerror=e=>{ if(e.error!=='interrupted') clearBtn(); };
@@ -682,8 +716,40 @@ function speak(text, btn){
 }
 if('speechSynthesis' in window){
   window.speechSynthesis.getVoices(); pickUSMaleVoice();
-  window.speechSynthesis.onvoiceschanged=()=>{ window.speechSynthesis.getVoices(); pickUSMaleVoice(); };
+  window.speechSynthesis.onvoiceschanged=()=>{ pickUSMaleVoice(); if(typeof renderVoiceControls==='function') renderVoiceControls(); };
 }
+
+// set voice/speed from the picker
+function setVoice(name){ savedVoiceName=name; localStorage.setItem('tts_voice',name); pickUSMaleVoice(); }
+function setRate(r){ rate=r; localStorage.setItem('tts_rate', String(r)); }
+
+function renderVoiceControls(){
+  const box=document.getElementById('voiceBox'); if(!box) return;
+  const ranked=rankedEnglishVoices();
+  if(!ranked.length){ box.innerHTML='<label>🔊 Voice</label><div style="color:var(--mut);font-size:12px">Loading voices… tap 🔊 once if the list stays empty.</div>'; return; }
+  const cur=usMaleVoice ? usMaleVoice.name : (ranked[0]&&ranked[0].name);
+  const speeds=[['Slow',0.7],['Normal',0.85],['Fast',1.0]];
+  box.innerHTML=
+    '<label>🔊 Voice (best ones are at the top)</label>'+
+    '<select class="voice-select" id="voiceSel">'+
+      ranked.map(v=>{
+        const tag=(!v.localService)?' · natural':'';
+        return '<option value="'+v.name.replace(/"/g,'&quot;')+'"'+(v.name===cur?' selected':'')+'>'+v.name+tag+'</option>';
+      }).join('')+
+    '</select>'+
+    '<label>Speed</label><div class="speed-row">'+
+      speeds.map(s=>'<button class="speed-btn '+(Math.abs(rate-s[1])<0.03?'on':'')+'" data-rate="'+s[1]+'">'+s[0]+'</button>').join('')+
+    '</div>'+
+    '<button class="voice-test" id="voiceTest">▶ Test this voice</button>';
+}
+document.addEventListener('click',e=>{
+  const sp=e.target.closest('[data-rate]');
+  if(sp){ setRate(parseFloat(sp.dataset.rate)); renderVoiceControls(); speak('This is the speaking speed.', null); return; }
+  if(e.target.id==='voiceTest'){ speak('Hello! This is how this voice sounds when you practice English.', null); return; }
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='voiceSel'){ setVoice(e.target.value); speak('Voice selected.', null); }
+});
 
 /* ---------- PRONUNCIATION CHECK — real live mic (Web Speech API) ---------- */
 // Works on https (GitHub Pages) and inside the PWABuilder APK.
@@ -694,10 +760,55 @@ let recognizer=null, recBtn=null;
 
 function norm(s){ return (s||'').toLowerCase().replace(/[^a-z' ]/g,'').replace(/\s+/g,' ').trim(); }
 
-function showResult(resultEl, target, said, match){
+// Levenshtein edit distance for fuzzy pronunciation matching
+function editDist(a,b){
+  const m=a.length, n=b.length;
+  if(!m) return n; if(!n) return m;
+  let prev=Array.from({length:n+1},(_,i)=>i);
+  for(let i=1;i<=m;i++){
+    let cur=[i];
+    for(let j=1;j<=n;j++){
+      const cost=a[i-1]===b[j-1]?0:1;
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+cost);
+    }
+    prev=cur;
+  }
+  return prev[n];
+}
+// similarity 0..1
+function similarity(a,b){
+  if(!a||!b) return 0;
+  const d=editDist(a,b), max=Math.max(a.length,b.length);
+  return max? 1-(d/max) : 1;
+}
+// returns 'match' | 'close' | 'no'
+function matchQuality(target, alts){
+  const t=norm(target);
+  let best=0;
+  for(const a of alts){
+    const n=norm(a);
+    if(n===t || n.includes(t) || t.includes(n)) return 'match';
+    best=Math.max(best, similarity(n,t));
+    // also compare word-by-word for multi-word targets
+    if(t.includes(' ')){
+      const tw=t.split(' '), nw=n.split(' ');
+      const hit=tw.filter(w=>nw.some(x=>similarity(x,w)>=0.8)).length;
+      best=Math.max(best, hit/tw.length);
+    }
+  }
+  if(best>=0.85) return 'match';   // very close = accept (accent/mishearing tolerance)
+  if(best>=0.6)  return 'close';   // partial
+  return 'no';
+}
+
+function showResult(resultEl, target, said, quality){
   resultEl.className='mic-result show';
-  if(match){
+  if(quality==='match'){
     resultEl.innerHTML='<span class="ok">✅ Correct! Well done.</span><br><span class="heard">Heard: <b>'+said+'</b></span>';
+  } else if(quality==='close'){
+    resultEl.innerHTML='<span class="close">🟡 Almost! Very close.</span><br>'+
+      '<span class="heard">You said: <b>'+(said||'(nothing)')+'</b><br>Target: <b>'+target+'</b></span><br>'+
+      '<span class="heard">💡 Tap 🔊, listen, and try once more.</span>';
   } else {
     resultEl.innerHTML='<span class="bad">❌ Not matching yet — try again.</span><br>'+
       '<span class="heard">You said: <b>'+(said||'(nothing)')+'</b><br>Target: <b>'+target+'</b></span><br>'+
@@ -721,7 +832,7 @@ function startListening(target, micBtn, resultEl, inputWrap){
   recognizer = new SR();
   recognizer.lang='en-US';
   recognizer.interimResults=false;
-  recognizer.maxAlternatives=5;
+  recognizer.maxAlternatives=8;
 
   recBtn=micBtn; micBtn.classList.add('rec');
   resultEl.className='mic-result show';
@@ -730,9 +841,8 @@ function startListening(target, micBtn, resultEl, inputWrap){
   recognizer.onresult=(ev)=>{
     const alts=[]; for(let i=0;i<ev.results[0].length;i++) alts.push(ev.results[0][i].transcript);
     const heard=alts[0]||'';
-    const t=norm(target);
-    const match = alts.some(a=>{ const n=norm(a); return n===t || n.includes(t) || t.includes(n); });
-    showResult(resultEl, target, heard, match);
+    const quality=matchQuality(target, alts);
+    showResult(resultEl, target, heard, quality);
   };
   recognizer.onerror=(e)=>{
     let msg;
@@ -759,8 +869,7 @@ function startListening(target, micBtn, resultEl, inputWrap){
 function checkSpoken(target, inputEl, resultEl){
   const said=inputEl.value;
   if(!said.trim()){ resultEl.className='mic-result show'; resultEl.innerHTML='<span class="heard">Type or speak with the keyboard 🎤, then Check.</span>'; return; }
-  const t=norm(target), s=norm(said);
-  showResult(resultEl, target, said, (s===t||s.includes(t)||t.includes(s)));
+  showResult(resultEl, target, said, matchQuality(target, [said]));
 }
 
 /* ---------- TABS ---------- */
@@ -771,6 +880,7 @@ document.getElementById('tabs').addEventListener('click',e=>{
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+b.dataset.p).classList.add('on');
   if(b.dataset.p==='quiz') startNewRound();
+  if(b.dataset.p==='vocab') renderVoiceControls();
   if(b.dataset.p==='review') startReview();
   if(b.dataset.p==='method') renderMethod();
   if(b.dataset.p==='today') renderToday();
@@ -1372,7 +1482,7 @@ function renderToday(){
 /* ---------- DAY QUIZ (today's words + review of earlier days) ---------- */
 let dayQuiz=null;          // {q, correct, opts, answered}
 let dayQuizRound={n:0, right:0};
-const DAY_QUIZ_LEN=6;      // questions per day quiz
+const DAY_QUIZ_LEN=20;     // questions per day quiz
 
 function buildDayQuizPool(){
   const plan=getLessonPlan(selectedLesson);
@@ -1511,7 +1621,7 @@ document.getElementById('todayBox').addEventListener('click',e=>{
   }
 });
 
-renderWOTD(); startNewRound();
+renderWOTD(); startNewRound(); renderVoiceControls();
 renderVocab(); renderWeek(); renderDiaPick(); renderDia();
 selectedLesson=firstIncompleteLesson(); todayState=lessonState(selectedLesson);
 updateDueBadge(); renderMethod(); renderToday();
