@@ -172,8 +172,9 @@
   .method-hero p{color:var(--mut);font-size:13px}
 
   /* TODAY tab */
-  .day-picker{display:flex;gap:5px;justify-content:space-between;margin-bottom:18px}
-  .day-pick{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 7px;border-radius:12px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);cursor:pointer;position:relative;font-family:'DM Sans',sans-serif;transition:all .15s}
+  .day-picker{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:18px;scrollbar-width:none}
+  .day-picker::-webkit-scrollbar{display:none}
+  .day-pick{flex:0 0 auto;min-width:56px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 7px;border-radius:12px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);cursor:pointer;position:relative;font-family:'DM Sans',sans-serif;transition:all .15s}
   .day-pick .dp-dow{font-size:10px;font-weight:600;letter-spacing:.5px}
   .day-pick .dp-num{font-size:17px;font-weight:700;color:var(--tx)}
   .day-pick .dp-today{position:absolute;bottom:3px;color:var(--gold);font-size:14px;line-height:0}
@@ -1215,15 +1216,15 @@ function renderToday(){
   const greet=hr<12?'Good morning':hr<18?'Good afternoon':'Good evening';
 
   // ---- ROLLING 7-LESSON PICKER ----
-  // Window: show a few completed days behind the current one (so you can review them),
-  // then the current day, then locked days ahead. Always 7 slots, never starts below 1.
-  const BEHIND=2; // how many finished days to keep visible behind current
-  let winStart=Math.max(1, current-BEHIND);
-  // if user tapped an even earlier day, scroll the window back to include it
+  // Always show 7 forward days starting at the CURRENT (first incomplete) day,
+  // PLUS all completed days behind them as extra reviewable slots.
+  // So if Days 1-2 are done and current is Day 3, show Day1✓ Day2✓ then Day3..Day9.
+  const FORWARD=7;
+  let winStart=1;                       // start from the first completed day
   if(selectedLesson<winStart) winStart=selectedLesson;
+  const winEnd=current + FORWARD - 1;   // 7 days forward from current
   let picker='<div class="day-picker">';
-  for(let k=0;k<7;k++){
-    const n=winStart+k;
+  for(let n=winStart; n<=winEnd; n++){
     const done=lessonComplete(n);
     const isSel=n===selectedLesson;
     const isCur=n===current;
