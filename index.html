@@ -147,6 +147,18 @@
   .review-bar{display:flex;gap:6px;margin-bottom:14px}
   .review-btn{flex:1;padding:10px 0;border-radius:10px;border:1px solid rgba(79,195,161,.35);background:rgba(79,195,161,.08);color:var(--grn);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
   .vlearn{margin-top:10px;width:100%;padding:9px 0;border-radius:10px;border:1px solid rgba(123,140,255,.4);background:rgba(123,140,255,.08);color:var(--pur);font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .vdetails-btn{margin-top:8px;background:none;border:none;color:var(--gold);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;padding:2px 0}
+  .vdetails{margin-top:8px;padding:11px 13px;background:var(--surf);border:1px solid var(--bd);border-radius:10px}
+  .vd-row{font-size:13px;line-height:1.55;color:var(--tx);margin-bottom:6px}
+  .vd-row:last-child{margin-bottom:0}
+  .vd-lbl{color:var(--mut);font-weight:700}
+  .vd-tip{color:var(--mut)}
+  .vdetails .vspeak{width:28px;height:24px;font-size:11px;padding:0;vertical-align:middle}
+  .myword-form{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:14px}
+  .myword-in{width:100%;box-sizing:border-box;background:var(--surf);border:1px solid var(--bd);color:var(--tx);border-radius:9px;padding:10px 12px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none;margin-bottom:8px}
+  .myword-in:focus{border-color:var(--gold)}
+  .myword-add{width:100%;padding:11px 0;border-radius:10px;border:none;background:var(--gold);color:#0d0f14;font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .mw-del{margin-left:auto;width:32px;height:30px;border-radius:8px;border:1px solid rgba(224,90,90,.3);background:var(--surf);color:var(--red);font-size:13px;cursor:pointer}
   .vlearn.added{border-color:rgba(79,195,161,.4);background:rgba(79,195,161,.1);color:var(--grn)}
   .gram-btns{display:flex;gap:8px;margin-top:10px}
   .gram-spk{width:40px;padding:7px 0;border-radius:9px;border:1px solid rgba(240,165,0,.4);background:var(--surf);color:var(--gold);font-size:14px;cursor:pointer}
@@ -380,6 +392,8 @@
       <button class="lp on" data-l="a2b1">A2 → B1 core</button>
       <button class="lp" data-l="b1b2">B1 → B2 core</button>
       <button class="lp" data-l="connect">Linking words</button>
+      <button class="lp" data-l="phrasal">Phrasal verbs</button>
+      <button class="lp" data-l="mine">⭐ My Words</button>
     </div>
     <div class="speak-unsupported" id="ttsUnsupported">⚠️ Speech not supported here</div>
     <p class="ttsnote">🔊 hear it · 🎤 tap & speak → instant pronunciation check · 🇺🇸 US male</p>
@@ -441,16 +455,16 @@
 /* ---------- DATA ---------- */
 const VOCAB = {
   a2b1: [
-    {w:"although", pos:"conj", m:"in spite of the fact that", ex:"Although it was raining, we went out."},
-    {w:"however", pos:"adv", m:"but / nevertheless", ex:"I was tired; however, I finished the work."},
-    {w:"decide", pos:"verb", m:"to make a choice", ex:"I decided to study English every day."},
-    {w:"improve", pos:"verb", m:"to get better", ex:"My English is improving little by little."},
-    {w:"experience", pos:"noun", m:"knowledge from doing things", ex:"She has a lot of work experience."},
-    {w:"opportunity", pos:"noun", m:"a chance to do something", ex:"This job is a great opportunity for me."},
-    {w:"suggest", pos:"verb", m:"to offer an idea", ex:"I suggest we leave early."},
-    {w:"prefer", pos:"verb", m:"to like one thing more", ex:"I prefer tea to coffee."},
-    {w:"realize", pos:"verb", m:"to suddenly understand", ex:"I realized I forgot my keys."},
-    {w:"available", pos:"adj", m:"free / able to be used", ex:"Are you available tomorrow?"},
+    {w:"although", pos:"conj", m:"in spite of the fact that", ex:"Although it was raining, we went out.", syn:"even though, though", opp:"because (gives a reason, not a contrast)", ex2:"Although she was tired, she kept working.", tip:"Use it at the start of a sentence to introduce a surprising contrast. Don't add 'but' in the second part."},
+    {w:"however", pos:"adv", m:"but / nevertheless", ex:"I was tired; however, I finished the work.", syn:"nevertheless, nonetheless, yet", opp:"therefore, as a result", ex2:"The plan is good. However, it costs too much.", tip:"More formal than 'but'. Usually starts a new sentence and is followed by a comma."},
+    {w:"decide", pos:"verb", m:"to make a choice", ex:"I decided to study English every day.", syn:"choose, determine", opp:"hesitate, delay", ex2:"They decided not to buy the house.", tip:"Followed by 'to + verb' (decided to go) or 'on + noun' (decided on a plan)."},
+    {w:"improve", pos:"verb", m:"to get better", ex:"My English is improving little by little.", syn:"get better, develop, enhance", opp:"worsen, decline", ex2:"Reading every day will improve your vocabulary.", tip:"Can be used about yourself (I improved) or things (the weather improved)."},
+    {w:"experience", pos:"noun", m:"knowledge from doing things", ex:"She has a lot of work experience.", syn:"background, practice", opp:"inexperience", ex2:"Living abroad was a great experience.", tip:"As a noun it's usually uncountable for skills ('much experience'), countable for events ('a strange experience')."},
+    {w:"opportunity", pos:"noun", m:"a chance to do something", ex:"This job is a great opportunity for me.", syn:"chance, opening", opp:"missed chance", ex2:"Travelling gives you the opportunity to learn.", tip:"Often followed by 'to + verb' (opportunity to learn) or 'for + noun'."},
+    {w:"suggest", pos:"verb", m:"to offer an idea", ex:"I suggest we leave early.", syn:"propose, recommend, advise", opp:"oppose", ex2:"He suggested going to the beach.", tip:"Followed by '-ing' (suggest going) or 'that...' — NOT 'suggest to go'."},
+    {w:"prefer", pos:"verb", m:"to like one thing more", ex:"I prefer tea to coffee.", syn:"favor, like better", opp:"dislike", ex2:"She prefers reading to watching TV.", tip:"Use 'prefer A to B'. With verbs: 'prefer doing' or 'prefer to do'."},
+    {w:"realize", pos:"verb", m:"to suddenly understand", ex:"I realized I forgot my keys.", syn:"understand, become aware", opp:"miss, overlook", ex2:"He realized that he was wrong.", tip:"About a sudden moment of understanding — not a slow process."},
+    {w:"available", pos:"adj", m:"free / able to be used", ex:"Are you available tomorrow?", syn:"free, accessible, on hand", opp:"busy, unavailable", ex2:"The tickets are no longer available.", tip:"Used for both people (free time) and things (in stock)."},
     {w:"according to", pos:"phrase", m:"as stated by", ex:"According to the news, it will rain."},
     {w:"instead of", pos:"phrase", m:"in place of", ex:"Let's walk instead of driving."},
     {w:"manage", pos:"verb", m:"to succeed in doing something hard", ex:"I managed to finish on time."},
@@ -459,17 +473,17 @@ const VOCAB = {
     {w:"explain", pos:"verb", m:"to make something clear", ex:"Please explain the rules to me."},
     {w:"arrange", pos:"verb", m:"to plan or organize", ex:"I arranged a meeting for Monday."},
     {w:"complain", pos:"verb", m:"to say you are unhappy", ex:"He complained about the noise."},
-    {w:"borrow", pos:"verb", m:"to take and return later", ex:"Can I borrow your pen?"},
-    {w:"lend", pos:"verb", m:"to give for a short time", ex:"She lent me her car."},
+    {w:"borrow", pos:"verb", m:"to take and return later", ex:"Can I borrow your pen?", syn:"take on loan", opp:"lend", ex2:"I borrowed a book from the library.", tip:"You BORROW from someone; they LEND to you. Don't mix them up!"},
+    {w:"lend", pos:"verb", m:"to give for a short time", ex:"She lent me her car.", syn:"loan", opp:"borrow", ex2:"Can you lend me five dollars?", tip:"You LEND something TO someone. Past tense is 'lent'."},
     {w:"notice", pos:"verb", m:"to see or become aware", ex:"I noticed a mistake in the text."},
     {w:"offer", pos:"verb", m:"to give the chance to have", ex:"They offered me a new job."},
-    {w:"accept", pos:"verb", m:"to say yes to something", ex:"I accepted his invitation."},
-    {w:"refuse", pos:"verb", m:"to say no", ex:"She refused to help."},
+    {w:"accept", pos:"verb", m:"to say yes to something", ex:"I accepted his invitation.", syn:"agree to, take", opp:"refuse, reject, decline", ex2:"She accepted the job offer.", tip:"Don't confuse with 'except' (meaning 'apart from')."},
+    {w:"refuse", pos:"verb", m:"to say no", ex:"She refused to help.", syn:"decline, reject, turn down", opp:"accept, agree", ex2:"He refused the offer politely.", tip:"Followed by 'to + verb' (refuse to go) or a noun (refuse the offer)."},
     {w:"avoid", pos:"verb", m:"to keep away from", ex:"I avoid eating too much sugar."},
     {w:"allow", pos:"verb", m:"to let something happen", ex:"They don't allow smoking here."},
     {w:"continue", pos:"verb", m:"to keep going", ex:"Please continue with your story."},
-    {w:"increase", pos:"verb", m:"to become bigger", ex:"Prices increased last year."},
-    {w:"reduce", pos:"verb", m:"to make smaller", ex:"We need to reduce costs."},
+    {w:"increase", pos:"verb", m:"to become bigger", ex:"Prices increased last year.", syn:"rise, grow, go up", opp:"decrease, reduce, fall", ex2:"The company increased salaries.", tip:"Stress changes: INcrease (noun) vs inCREASE (verb)."},
+    {w:"reduce", pos:"verb", m:"to make smaller", ex:"We need to reduce costs.", syn:"decrease, lower, cut", opp:"increase, raise", ex2:"Walking reduces stress.", tip:"Common in business English: reduce costs, reduce time, reduce risk."},
     {w:"provide", pos:"verb", m:"to give what is needed", ex:"The hotel provides free breakfast."},
     {w:"receive", pos:"verb", m:"to get something", ex:"I received your message."},
     {w:"reach", pos:"verb", m:"to arrive at", ex:"We reached the city at night."},
@@ -575,6 +589,38 @@ const VOCAB = {
     {w:"all in all", pos:"phrase", m:"considering everything", ex:"All in all, it was a good day."},
     {w:"for this reason", pos:"phrase", m:"because of this", ex:"For this reason, I left early."},
     {w:"needless to say", pos:"phrase", m:"obviously", ex:"Needless to say, he was happy."},
+  ],
+  phrasal: [
+    {w:"get on", pos:"phrasal", m:"to enter a bus/train/plane", ex:"We need to get on the next bus."},
+    {w:"get off", pos:"phrasal", m:"to leave a bus/train/plane", ex:"Get off at the third stop."},
+    {w:"get up", pos:"phrasal", m:"to rise from bed", ex:"I get up at 6 every morning."},
+    {w:"get along", pos:"phrasal", m:"to have a good relationship", ex:"I get along well with my team."},
+    {w:"get over", pos:"phrasal", m:"to recover from something", ex:"It took a week to get over the flu."},
+    {w:"take off", pos:"phrasal", m:"(plane) leave ground / remove", ex:"The plane will take off soon."},
+    {w:"take up", pos:"phrasal", m:"to start a hobby/activity", ex:"I want to take up swimming."},
+    {w:"take care of", pos:"phrasal", m:"to look after", ex:"She takes care of her parents."},
+    {w:"put on", pos:"phrasal", m:"to wear / dress in", ex:"Put on your jacket; it's cold."},
+    {w:"put off", pos:"phrasal", m:"to delay / postpone", ex:"They put off the meeting until Friday."},
+    {w:"put up with", pos:"phrasal", m:"to tolerate", ex:"I can't put up with the noise."},
+    {w:"turn on", pos:"phrasal", m:"to start a device", ex:"Turn on the lights, please."},
+    {w:"turn off", pos:"phrasal", m:"to stop a device", ex:"Don't forget to turn off the TV."},
+    {w:"turn up", pos:"phrasal", m:"to arrive / increase volume", ex:"He turned up late to the party."},
+    {w:"turn down", pos:"phrasal", m:"to reject / lower volume", ex:"She turned down the job offer."},
+    {w:"look for", pos:"phrasal", m:"to search for", ex:"I'm looking for my keys."},
+    {w:"look after", pos:"phrasal", m:"to take care of", ex:"Can you look after the kids tonight?"},
+    {w:"look forward to", pos:"phrasal", m:"to be excited about a future event", ex:"I look forward to seeing you."},
+    {w:"look up", pos:"phrasal", m:"to search for information", ex:"Look up the word in a dictionary."},
+    {w:"give up", pos:"phrasal", m:"to stop trying / quit", ex:"Don't give up on your goals."},
+    {w:"give back", pos:"phrasal", m:"to return something", ex:"Please give back my pen."},
+    {w:"find out", pos:"phrasal", m:"to discover information", ex:"I need to find out the truth."},
+    {w:"come back", pos:"phrasal", m:"to return", ex:"She will come back next week."},
+    {w:"come up with", pos:"phrasal", m:"to think of an idea", ex:"He came up with a great plan."},
+    {w:"go on", pos:"phrasal", m:"to continue", ex:"Please go on with your story."},
+    {w:"carry on", pos:"phrasal", m:"to continue", ex:"Carry on; you're doing well."},
+    {w:"break down", pos:"phrasal", m:"to stop working (machine)", ex:"My car broke down on the road."},
+    {w:"work out", pos:"phrasal", m:"to exercise / solve", ex:"I work out at the gym daily."},
+    {w:"set up", pos:"phrasal", m:"to arrange / establish", ex:"They set up a new company."},
+    {w:"run out of", pos:"phrasal", m:"to have none left", ex:"We ran out of milk."},
   ]
 };
 
@@ -976,8 +1022,50 @@ document.getElementById('tabs').addEventListener('click',e=>{
 
 /* ---------- VOCAB ---------- */
 let curLevel='a2b1';
+// user-added words, saved in browser
+VOCAB.mine = JSON.parse(localStorage.getItem('my_words')||'[]');
+function saveMyWords(){ VOCAB.mine=VOCAB.mine||[]; localStorage.setItem('my_words', JSON.stringify(VOCAB.mine)); }
+function addMyWord(w, m, ex){
+  if(!w.trim()||!m.trim()) return false;
+  VOCAB.mine.unshift({w:w.trim(), pos:'my word', m:m.trim(), ex:(ex||'').trim()||('Example: '+w.trim())});
+  saveMyWords(); return true;
+}
+function deleteMyWord(i){ VOCAB.mine.splice(i,1); saveMyWords(); }
+
 function renderVocab(){
   const list=document.getElementById('vocabList');
+  // My Words section: add-form + saved words with delete
+  if(curLevel==='mine'){
+    let html='<div class="myword-form">'+
+      '<input class="myword-in" id="mwWord" placeholder="New word or phrase…" autocomplete="off">'+
+      '<input class="myword-in" id="mwMean" placeholder="Meaning (in English or Arabic)…" autocomplete="off">'+
+      '<input class="myword-in" id="mwEx" placeholder="Example sentence (optional)…" autocomplete="off">'+
+      '<button class="myword-add" id="mwAdd">+ Save word</button>'+
+      '</div>';
+    if(!VOCAB.mine.length){
+      html+='<p class="sub" style="text-align:center;padding:24px 0">No words yet. Add your first word above — it\'s saved on your phone.</p>';
+    } else {
+      html+=VOCAB.mine.map((v,i)=>{
+        if(!matchSearch(v)) return '';
+        return `
+        <div class="vrow">
+          <div class="vtop">
+            <span class="vword">${v.w}</span>
+            <span class="vpos">${v.pos}</span>
+            <button class="vspeak" data-sp="${i}-w">🔊</button>
+            <button class="vmic" data-mic="${i}">🎤</button>
+            <button class="mw-del" data-del="${i}">🗑️</button>
+          </div>
+          <div class="vmean">${v.m}</div>
+          <div class="vex"><div class="vex-txt">"${v.ex}"</div><button class="vex-speak" data-sp="${i}-e">🔊</button></div>
+          <button class="vlearn ${srs[v.w]?'added':''}" data-learn="${i}">${srs[v.w]?'✓ In Review':'+ Add to Review'}</button>
+          <div class="mic-result" id="mres-${i}"></div>
+        </div>`;
+      }).join('');
+    }
+    list.innerHTML=html;
+    return;
+  }
   list.innerHTML=VOCAB[curLevel].map((v,i)=>{
     if(!matchSearch(v)) return '';
     return `
@@ -993,6 +1081,14 @@ function renderVocab(){
         <div class="vex-txt">"${v.ex}"</div>
         <button class="vex-speak" data-sp="${i}-e">🔊</button>
       </div>
+      ${(v.syn||v.opp||v.ex2||v.tip)?`
+      <button class="vdetails-btn" data-details="${i}">More details ▾</button>
+      <div class="vdetails" id="vdet-${i}" style="display:none">
+        ${v.syn?`<div class="vd-row"><span class="vd-lbl">Similar:</span> ${v.syn}</div>`:''}
+        ${v.opp?`<div class="vd-row"><span class="vd-lbl">Opposite:</span> ${v.opp}</div>`:''}
+        ${v.ex2?`<div class="vd-row"><span class="vd-lbl">Another example:</span> <i>"${v.ex2}"</i> <button class="vspeak" data-sp="${i}-e2">🔊</button></div>`:''}
+        ${v.tip?`<div class="vd-row vd-tip"><span class="vd-lbl">💡 Tip:</span> ${v.tip}</div>`:''}
+      </div>`:''}
       <button class="vlearn ${srs[v.w]?'added':''}" data-learn="${i}">${srs[v.w]?'✓ In Review':'+ Add to Review'}</button>
       <div class="mic-input-wrap" id="miw-${i}" style="display:none">
         <input class="mic-input" id="min-${i}" placeholder="Say it with keyboard 🎤, then Check…" autocapitalize="none" autocomplete="off">
@@ -1011,6 +1107,28 @@ document.getElementById('vsearch').addEventListener('input',function(){
   searchTerm=this.value.trim(); renderVocab();
 });
 document.getElementById('vocabList').addEventListener('click',e=>{
+  // toggle word details
+  const det=e.target.closest('[data-details]');
+  if(det){
+    const box=document.getElementById('vdet-'+det.dataset.details);
+    if(box){ const open=box.style.display!=='none'; box.style.display=open?'none':'block'; det.textContent=open?'More details ▾':'Hide details ▴'; }
+    return;
+  }
+  // add a new user word
+  if(e.target.id==='mwAdd'){
+    const w=document.getElementById('mwWord').value;
+    const m=document.getElementById('mwMean').value;
+    const ex=document.getElementById('mwEx').value;
+    if(addMyWord(w,m,ex)){ renderVocab(); }
+    else { alert('Please enter both a word and its meaning.'); }
+    return;
+  }
+  // delete a user word
+  const del=e.target.closest('[data-del]');
+  if(del){
+    if(confirm('Delete this word?')){ deleteMyWord(+del.dataset.del); renderVocab(); }
+    return;
+  }
   const learn=e.target.closest('[data-learn]');
   if(learn){
     const v=VOCAB[curLevel][+learn.dataset.learn];
@@ -1031,7 +1149,7 @@ document.getElementById('vocabList').addEventListener('click',e=>{
   const b=e.target.closest('[data-sp]'); if(!b) return;
   const [i,kind]=b.dataset.sp.split('-');
   const v=VOCAB[curLevel][+i];
-  speak(kind==='w'?v.w:v.ex, b);
+  speak(kind==='w'?v.w:(kind==='e2'?v.ex2:v.ex), b);
 });
 // pressing Enter in a mic input also checks
 document.getElementById('vocabList').addEventListener('keydown',e=>{
@@ -1172,7 +1290,7 @@ function srsRate(word, quality){
   srs[word]=e; saveSRS();
 }
 function getDueWords(){
-  const all=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect];
+  const all=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect, ...VOCAB.phrasal];
   const t=todayStr();
   return all.filter(v=>srs[v.w] && srs[v.w].due<=t);
 }
@@ -1287,7 +1405,7 @@ function newQuiz(){
   }
   quizRound.n++;
   quizRound.answered=false;
-  const pool=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect];
+  const pool=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect, ...VOCAB.phrasal];
   const type=QUIZ_TYPES[Math.floor(Math.random()*QUIZ_TYPES.length)];
   const correct=pool[Math.floor(Math.random()*pool.length)];
   const others=pool.filter(x=>x.w!==correct.w).sort(()=>Math.random()-0.5).slice(0,3);
@@ -1423,7 +1541,7 @@ function getStreak(){
 // ---- Per-lesson content: each lesson gets its own slice of words + dialogue ----
 function getLessonPlan(n){
   const idx=n-1; // lesson 1 → index 0
-  const allWords=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect];
+  const allWords=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect, ...VOCAB.phrasal];
   const wStart=(idx*10)%allWords.length;
   const words=[];
   for(let i=0;i<10;i++) words.push(allWords[(wStart+i)%allWords.length]);
@@ -1598,7 +1716,7 @@ function buildDayQuizPool(){
   const todayWords=plan.words;                    // this day's 10 words
   // review words = words from earlier lessons (1..selectedLesson-1)
   let reviewWords=[];
-  const allWords=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect];
+  const allWords=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect, ...VOCAB.phrasal];
   for(let L=1; L<selectedLesson; L++){
     const idx=(L-1);
     const wStart=(idx*10)%allWords.length;
