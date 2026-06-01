@@ -745,31 +745,53 @@ if('speechSynthesis' in window){
 function setVoice(name){ savedVoiceName=name; localStorage.setItem('tts_voice',name); pickUSMaleVoice(); }
 function setRate(r){ rate=r; localStorage.setItem('tts_rate', String(r)); }
 function setAccent(a){ prefAccent=a; localStorage.setItem('tts_accent',a); savedVoiceName=''; localStorage.removeItem('tts_voice'); pickUSMaleVoice(); }
-function setGender(g){ prefGender=g; localStorage.setItem('tts_gender',g); savedVoiceName=''; localStorage.removeItem('tts_voice'); pickUSMaleVoice(); }
+function setGender(g){
+  prefGender=g; localStorage.setItem('tts_gender',g);
+  // try name-based match first
+  let accentVoices=allVoices.filter(v=>voiceAccent(v)===prefAccent);
+  if(!accentVoices.length) accentVoices=allVoices.filter(v=>{const a=voiceAccent(v);return a==='us'||a==='uk';});
+  accentVoices=accentVoices.sort((a,b)=>voiceScore(b)-voiceScore(a));
+  let match=accentVoices.find(v=>voiceGender(v)===g);
+  if(!match){
+    // names don't reveal gender → pick a DIFFERENT voice than the current one,
+    // so toggling actually changes the sound (best guess across available voices)
+    const others=accentVoices.filter(v=>v.name!==(usMaleVoice&&usMaleVoice.name));
+    match = g==='male' ? (others[others.length-1]||accentVoices[0]) : (accentVoices[0]);
+  }
+  if(match){ savedVoiceName=match.name; localStorage.setItem('tts_voice',match.name); usMaleVoice=match; }
+  else pickUSMaleVoice();
+}
 
 function renderVoiceControls(){
   const box=document.getElementById('voiceBox'); if(!box) return;
-  const ranked=rankedEnglishVoices();
-  const cur=usMaleVoice ? usMaleVoice.name : (ranked[0]&&ranked[0].name);
+  // ALL US/UK voices for the chosen accent (not gender-filtered) so user can pick by ear
+  let accentVoices=allVoices.filter(v=>voiceAccent(v)===prefAccent);
+  if(!accentVoices.length) accentVoices=allVoices.filter(v=>{const a=voiceAccent(v);return a==='us'||a==='uk';});
+  accentVoices=accentVoices.sort((a,b)=>voiceScore(b)-voiceScore(a));
+  const cur=usMaleVoice ? usMaleVoice.name : (accentVoices[0]&&accentVoices[0].name);
   const speeds=[['Slow',0.7],['Normal',0.85],['Fast',1.0]];
+
+  function gLabel(g){ return g==='male'?'♂ male':g==='female'?'♀ female':'• voice'; }
+
   box.innerHTML=
     '<label>🌍 Accent</label><div class="speed-row" style="margin-bottom:10px">'+
       '<button class="speed-btn '+(prefAccent==='us'?'on':'')+'" data-accent="us">🇺🇸 US</button>'+
       '<button class="speed-btn '+(prefAccent==='uk'?'on':'')+'" data-accent="uk">🇬🇧 UK</button>'+
     '</div>'+
-    '<label>🧑 Voice gender</label><div class="speed-row" style="margin-bottom:10px">'+
+    '<label>🧑 Prefer gender (auto-pick)</label><div class="speed-row" style="margin-bottom:10px">'+
       '<button class="speed-btn '+(prefGender==='male'?'on':'')+'" data-gender="male">♂ Male</button>'+
       '<button class="speed-btn '+(prefGender==='female'?'on':'')+'" data-gender="female">♀ Female</button>'+
     '</div>'+
-    (ranked.length
-      ? '<label>🔊 Voice ('+ranked.length+' available)</label>'+
+    (accentVoices.length
+      ? '<label>🔊 Pick a voice ('+accentVoices.length+' '+prefAccent.toUpperCase()+')</label>'+
         '<select class="voice-select" id="voiceSel">'+
-          ranked.map(v=>{
-            const tag=(!v.localService)?' · natural':'';
+          accentVoices.map(v=>{
+            const tag=(!v.localService?' · natural':'')+' · '+gLabel(voiceGender(v));
             return '<option value="'+v.name.replace(/"/g,'&quot;')+'"'+(v.name===cur?' selected':'')+'>'+v.name+tag+'</option>';
           }).join('')+
-        '</select>'
-      : '<div style="color:var(--mut);font-size:12px;margin-bottom:8px">No '+prefAccent.toUpperCase()+' '+prefGender+' voice found on this phone. Try the other gender/accent, or install more voices in your phone\'s Text-to-speech settings.</div>')+
+        '</select>'+
+        '<div style="color:var(--mut);font-size:11px;margin-bottom:8px">If Male/Female sounds wrong, your phone may label voices generically — just pick one from the list by ear.</div>'
+      : '<div style="color:var(--mut);font-size:12px;margin-bottom:8px">No '+prefAccent.toUpperCase()+' voice found. Install voices in your phone\'s Text-to-speech settings.</div>')+
     '<label>Speed</label><div class="speed-row">'+
       speeds.map(s=>'<button class="speed-btn '+(Math.abs(rate-s[1])<0.03?'on':'')+'" data-rate="'+s[1]+'">'+s[0]+'</button>').join('')+
     '</div>'+
