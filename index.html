@@ -120,6 +120,11 @@
   .quiz-next{margin-top:16px;padding:13px 28px;border-radius:12px;border:none;background:var(--gold);color:#000;font-weight:700;font-size:14px;cursor:pointer;font-family:'DM Sans',sans-serif}
   .quiz-fb{margin-top:12px;font-size:14px;font-weight:600;min-height:20px}
   .quiz-fb.ok{color:var(--grn)} .quiz-fb.no{color:var(--red)}
+  .quiz-result{background:var(--card);border:1px solid var(--bd);border-radius:18px;padding:34px 20px;text-align:center}
+  .qr-emoji{font-size:48px;margin-bottom:8px}
+  .qr-score{font-family:'Fraunces',serif;font-size:34px;font-weight:900;color:var(--gold)}
+  .qr-pct{font-size:15px;color:var(--mut);margin-bottom:10px}
+  .qr-msg{font-size:14px;color:var(--tx);line-height:1.6;max-width:320px;margin:0 auto 18px}
 
   /* global search */
   .search-wrap{position:relative;margin-bottom:16px}
@@ -765,7 +770,7 @@ document.getElementById('tabs').addEventListener('click',e=>{
   b.classList.add('on');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+b.dataset.p).classList.add('on');
-  if(b.dataset.p==='quiz') newQuiz();
+  if(b.dataset.p==='quiz') startNewRound();
   if(b.dataset.p==='review') startReview();
   if(b.dataset.p==='method') renderMethod();
   if(b.dataset.p==='today') renderToday();
@@ -1070,12 +1075,20 @@ function renderWOTD(){
     '<div class="wotd-ex">"'+v.ex+'"</div>';
 }
 
-/* ---------- QUIZ (multiple types) ---------- */
+/* ---------- QUIZ (10-question rounds) ---------- */
 let quizStats=JSON.parse(localStorage.getItem('quiz_stats')||'{"correct":0,"total":0}');
 let quizCurrent=null;
 const QUIZ_TYPES=['meaning','reverse','audio','gap'];
+const QUIZ_ROUND=10;            // questions per round
+let quizRound={n:0, right:0, answered:false}; // progress within the current round
 
 function newQuiz(){
+  // start a fresh round if the previous one finished (or first time)
+  if(quizRound.n>=QUIZ_ROUND || quizRound.n===0 && !quizCurrent){
+    quizRound={n:0, right:0, answered:false};
+  }
+  quizRound.n++;
+  quizRound.answered=false;
   const pool=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect];
   const type=QUIZ_TYPES[Math.floor(Math.random()*QUIZ_TYPES.length)];
   const correct=pool[Math.floor(Math.random()*pool.length)];
@@ -1083,10 +1096,33 @@ function newQuiz(){
   quizCurrent={type,correct,opts:[correct,...others].sort(()=>Math.random()-0.5)};
   renderQuiz(false);
 }
+
+function startNewRound(){
+  quizRound={n:0, right:0, answered:false};
+  quizCurrent=null;
+  newQuiz();
+}
+
+function renderQuizResult(){
+  const score=quizRound.right, total=QUIZ_ROUND;
+  const pct=Math.round(score/total*100);
+  let msg, emoji;
+  if(pct>=90){ emoji='🏆'; msg='Outstanding! You really know these words.'; }
+  else if(pct>=70){ emoji='🎉'; msg='Great job! Solid progress toward B2.'; }
+  else if(pct>=50){ emoji='👍'; msg='Good effort. Review the ones you missed and try again.'; }
+  else { emoji='💪'; msg='Keep practicing — repetition is how it sticks.'; }
+  document.getElementById('quizBox').innerHTML=
+    '<div class="quiz-result"><div class="qr-emoji">'+emoji+'</div>'+
+    '<div class="qr-score">'+score+' / '+total+'</div>'+
+    '<div class="qr-pct">'+pct+'%</div>'+
+    '<div class="qr-msg">'+msg+'</div>'+
+    '<button class="quiz-next" onclick="startNewRound()">🔁 Play again</button></div>';
+}
+
 function renderQuiz(answered, chosen){
   const {type,correct,opts}=quizCurrent;
-  document.getElementById('quizScore').innerHTML='Score: <b>'+quizStats.correct+'</b> / '+quizStats.total+
-    (quizStats.total?' · '+Math.round(quizStats.correct/quizStats.total*100)+'%':'');
+  document.getElementById('quizScore').innerHTML=
+    'Question <b>'+quizRound.n+'</b> of '+QUIZ_ROUND+' · This round: <b>'+quizRound.right+'</b> correct';
 
   let q, stem, optText;
   if(type==='meaning'){
@@ -1099,7 +1135,7 @@ function renderQuiz(answered, chosen){
     q='Listen 🔊 and choose the word you hear'; stem='<button class="quiz-spk" onclick="speak('+JSON.stringify(correct.w).replace(/"/g,'&quot;')+', this)">🔊 Play word</button>';
     optText=(o)=>o.w;
   } else { // gap
-    q='Complete the sentence'; 
+    q='Complete the sentence';
     const gapped=correct.ex.replace(new RegExp(correct.w,'i'),'_____');
     stem='<div class="quiz-word" style="font-size:17px">'+gapped+'</div>';
     optText=(o)=>o.w;
@@ -1119,7 +1155,8 @@ function renderQuiz(answered, chosen){
   if(answered){
     const right=chosen.w===correct.w;
     html+='<div class="quiz-fb '+(right?'ok':'no')+'">'+(right?'✅ Correct!':'❌ Answer: '+correct.w+' — '+correct.m)+'</div>';
-    html+='<button class="quiz-next" onclick="newQuiz()">Next →</button>';
+    const isLast=quizRound.n>=QUIZ_ROUND;
+    html+='<button class="quiz-next" onclick="'+(isLast?'renderQuizResult()':'newQuiz()')+'">'+(isLast?'See results 🏁':'Next →')+'</button>';
   }
   html+='</div>';
   document.getElementById('quizBox').innerHTML=html;
@@ -1128,9 +1165,12 @@ function spkBtn(w){ return '<button class="quiz-spk" onclick="speak('+JSON.strin
 
 document.getElementById('quizBox').addEventListener('click',e=>{
   const b=e.target.closest('[data-qi]'); if(!b) return;
+  if(quizRound.answered) return;        // prevent double-answering
+  quizRound.answered=true;
   const chosen=quizCurrent.opts[+b.dataset.qi];
+  const right=chosen.w===quizCurrent.correct.w;
   quizStats.total++;
-  if(chosen.w===quizCurrent.correct.w) quizStats.correct++;
+  if(right){ quizStats.correct++; quizRound.right++; }
   localStorage.setItem('quiz_stats',JSON.stringify(quizStats));
   renderQuiz(true, chosen);
 });
@@ -1306,7 +1346,9 @@ function renderToday(){
       content='<div class="task-content"><button class="task-go" data-goto="review">Open Review →</button></div>';
     }
     else if(t.id==='quiz'){
-      content='<div class="task-content"><button class="task-go" data-goto="quiz">Open Quiz →</button></div>';
+      content='<div class="task-content"><div class="t-w-mean" style="margin-bottom:8px">'+
+        'Mix of <b style="color:var(--gold)">today\'s words</b> + <b style="color:var(--pur)">review of earlier days</b>.</div>'+
+        '<div id="dayQuizBox"></div></div>';
     }
 
     return '<div class="task '+(done?'done':'')+'" data-task="'+t.id+'">'+
@@ -1324,11 +1366,113 @@ function renderToday(){
   }
 
   box.innerHTML=html;
+  renderDayQuiz();   // fill the inline quiz for this day
+}
+
+/* ---------- DAY QUIZ (today's words + review of earlier days) ---------- */
+let dayQuiz=null;          // {q, correct, opts, answered}
+let dayQuizRound={n:0, right:0};
+const DAY_QUIZ_LEN=6;      // questions per day quiz
+
+function buildDayQuizPool(){
+  const plan=getLessonPlan(selectedLesson);
+  const todayWords=plan.words;                    // this day's 10 words
+  // review words = words from earlier lessons (1..selectedLesson-1)
+  let reviewWords=[];
+  const allWords=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect];
+  for(let L=1; L<selectedLesson; L++){
+    const idx=(L-1);
+    const wStart=(idx*10)%allWords.length;
+    for(let i=0;i<10;i++) reviewWords.push(allWords[(wStart+i)%allWords.length]);
+  }
+  // de-dupe review words by .w
+  const seen={}; reviewWords=reviewWords.filter(w=>{ if(seen[w.w])return false; seen[w.w]=1; return true; });
+  return {todayWords, reviewWords, allWords};
+}
+
+function nextDayQuestion(){
+  const {todayWords, reviewWords, allWords}=buildDayQuizPool();
+  dayQuizRound.n++;
+  // ~60% today's words, ~40% review (if review exists)
+  let pickFrom;
+  if(reviewWords.length && Math.random()<0.4) pickFrom=reviewWords;
+  else pickFrom=todayWords;
+  const isReview = pickFrom===reviewWords;
+  const correct=pickFrom[Math.floor(Math.random()*pickFrom.length)];
+  const distractPool=allWords.filter(x=>x.w!==correct.w);
+  const others=distractPool.sort(()=>Math.random()-0.5).slice(0,3);
+  const types=['meaning','reverse','audio'];
+  const type=types[Math.floor(Math.random()*types.length)];
+  dayQuiz={type, correct, opts:[correct,...others].sort(()=>Math.random()-0.5), answered:false, isReview};
+  drawDayQuiz(false);
+}
+
+function startDayQuiz(){
+  dayQuizRound={n:0, right:0};
+  nextDayQuestion();
+}
+
+function drawDayQuizResult(){
+  const box=document.getElementById('dayQuizBox'); if(!box) return;
+  const s=dayQuizRound.right, t=DAY_QUIZ_LEN, pct=Math.round(s/t*100);
+  let emoji = pct>=80?'🏆':pct>=60?'🎉':pct>=40?'👍':'💪';
+  box.innerHTML='<div class="quiz-result" style="padding:24px 16px">'+
+    '<div class="qr-emoji">'+emoji+'</div><div class="qr-score">'+s+' / '+t+'</div>'+
+    '<div class="qr-pct">'+pct+'%</div>'+
+    '<button class="quiz-next" onclick="startDayQuiz()">🔁 Try again</button></div>';
+}
+
+function drawDayQuiz(answered, chosen){
+  const box=document.getElementById('dayQuizBox'); if(!box || !dayQuiz) return;
+  const {type,correct,opts,isReview}=dayQuiz;
+  let q, stem, optText;
+  if(type==='meaning'){ q='What does this word mean?'; stem='<div class="quiz-word" style="font-size:22px">'+correct.w+'</div>'+spkBtn(correct.w); optText=(o)=>o.m; }
+  else if(type==='reverse'){ q='Which word means this?'; stem='<div class="quiz-word" style="font-size:16px;font-style:italic">"'+correct.m+'"</div>'; optText=(o)=>o.w; }
+  else { q='Listen 🔊 and choose the word'; stem='<button class="quiz-spk" onclick="speak('+JSON.stringify(correct.w).replace(/"/g,'&quot;')+', this)">🔊 Play word</button>'; optText=(o)=>o.w; }
+
+  let html='<div class="quiz-card" style="padding:16px 14px">'+
+    '<div class="quiz-q">Q'+dayQuizRound.n+' / '+DAY_QUIZ_LEN+' · '+(isReview?'<span style="color:var(--pur)">🔁 review</span>':'<span style="color:var(--gold)">today</span>')+'</div>'+
+    stem+'<div class="quiz-opts" style="margin-top:14px">';
+  opts.forEach((o,i)=>{
+    let cls='quiz-opt';
+    if(answered){ if(o.w===correct.w) cls+=' correct'; else if(chosen&&o.w===chosen.w) cls+=' wrong'; }
+    html+='<button class="'+cls+'" '+(answered?'disabled':'data-dq="'+i+'"')+'>'+optText(o)+'</button>';
+  });
+  html+='</div>';
+  if(answered){
+    const right=chosen.w===correct.w;
+    html+='<div class="quiz-fb '+(right?'ok':'no')+'">'+(right?'✅ Correct!':'❌ '+correct.w+' — '+correct.m)+'</div>';
+    const last=dayQuizRound.n>=DAY_QUIZ_LEN;
+    html+='<button class="quiz-next" onclick="'+(last?'drawDayQuizResult()':'nextDayQuestion()')+'">'+(last?'See result 🏁':'Next →')+'</button>';
+  }
+  html+='</div>';
+  box.innerHTML=html;
+}
+
+function renderDayQuiz(){
+  const box=document.getElementById('dayQuizBox'); if(!box) return;
+  // start a quiz only if none is in progress; otherwise redraw current state
+  if(!dayQuiz){ startDayQuiz(); return; }
+  if(dayQuizRound.n>DAY_QUIZ_LEN || (dayQuizRound.n===DAY_QUIZ_LEN && dayQuiz.answered)){ drawDayQuizResult(); return; }
+  drawDayQuiz(dayQuiz.answered, dayQuiz._chosen);
 }
 
 document.getElementById('todayBox').addEventListener('click',e=>{
+  // day quiz answer
+  const dq=e.target.closest('[data-dq]');
+  if(dq){
+    if(dayQuiz.answered) return;
+    dayQuiz.answered=true;
+    const chosen=dayQuiz.opts[+dq.dataset.dq];
+    dayQuiz._chosen=chosen;
+    const right=chosen.w===dayQuiz.correct.w;
+    if(right) dayQuizRound.right++;
+    drawDayQuiz(true, chosen);
+    return;
+  }
+
   const day=e.target.closest('[data-lesson]');
-  if(day){ selectedLesson=+day.dataset.lesson; renderToday(); return; }
+  if(day){ selectedLesson=+day.dataset.lesson; dayQuiz=null; dayQuizRound={n:0,right:0}; renderToday(); return; }
   const lockedDay=e.target.closest('[data-locked]');
   if(lockedDay){
     const box=document.getElementById('lockMsg');
@@ -1367,7 +1511,7 @@ document.getElementById('todayBox').addEventListener('click',e=>{
   }
 });
 
-renderWOTD(); newQuiz();
+renderWOTD(); startNewRound();
 renderVocab(); renderWeek(); renderDiaPick(); renderDia();
 selectedLesson=firstIncompleteLesson(); todayState=lessonState(selectedLesson);
 updateDueBadge(); renderMethod(); renderToday();
