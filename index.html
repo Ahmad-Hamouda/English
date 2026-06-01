@@ -127,6 +127,7 @@
   .mic-check{flex:0 0 auto;background:var(--pur);color:#000;border:none;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
   .vspeak.sp{background:rgba(240,165,0,.15);border-color:var(--gold);animation:pulse .9s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .vphon{color:var(--blu);font-size:12.5px;margin-top:5px;font-style:italic;letter-spacing:.3px}
   .vmean{color:var(--mut);font-size:13px;margin-top:7px;line-height:1.5}
   .vex{margin-top:9px;padding-top:9px;border-top:1px solid var(--bd);display:flex;align-items:flex-start;gap:8px}
   .vex-txt{font-family:'Fraunces',serif;font-size:14px;font-style:italic;color:var(--tx);line-height:1.5;flex:1}
@@ -1138,6 +1139,50 @@ let recognizer=null, recBtn=null;
 
 function norm(s){ return (s||'').toLowerCase().replace(/[^a-z' ]/g,'').replace(/\s+/g,' ').trim(); }
 
+/* ---------- PHONETIC RESPELLING (approximate pronunciation guide) ---------- */
+// Rule-based simple respelling to help see how a word sounds. The 🔊 audio is the true reference.
+function respell(word){
+  // multi-word phrases: respell each word
+  if(/\s/.test(word)){
+    return word.split(/\s+/).map(w=>respellOne(w)).join(' ');
+  }
+  return respellOne(word);
+}
+function respellOne(raw){
+  let w=raw.toLowerCase().replace(/[^a-z']/g,'');
+  if(!w) return raw;
+  // common whole-word overrides (irregular but frequent)
+  const O={
+    the:'thuh', a:'uh', to:'too', do:'doo', of:'uhv', one:'wun', once:'wuns',
+    two:'too', who:'hoo', does:'duz', said:'sed', says:'sez', could:'kood', would:'wood',
+    should:'shood', through:'throo', though:'thoh', enough:'ee-NUF', people:'PEE-puhl',
+    because:'bee-KAWZ', business:'BIZ-nis', women:'WIM-in', busy:'BIZ-ee', friend:'frend',
+    money:'MUN-ee', other:'UTH-er', mother:'MUTH-er', sure:'shoor', sugar:'SHOOG-er',
+    although:'awl-THOH', though:'thoh', thought:'thawt', decide:'dee-SYD', decided:'dee-SY-did',
+    negotiation:'nih-goh-shee-AY-shun', negotiate:'nih-GOH-shee-ayt', schedule:'SKEJ-ool',
+    colleague:'KOL-eeg', receipt:'rih-SEET', island:'EYE-luhnd', answer:'AN-ser',
+    comfortable:'KUMF-ter-buhl', vegetable:'VEJ-tuh-buhl', February:'FEB-roo-air-ee',
+    Wednesday:'WENZ-day', favourite:'FAY-ver-it', favorite:'FAY-ver-it', develop:'dih-VEL-uhp',
+    determine:'dih-TUR-min', acquire:'uh-KWYR', genuine:'JEN-yoo-in', vague:'vayg'
+  };
+  if(O[w]) return O[w];
+  let s=w
+    .replace(/tion\b/g,'shun').replace(/sion\b/g,'zhun')
+    .replace(/ph/g,'f').replace(/ck/g,'k').replace(/qu/g,'kw')
+    .replace(/ought|aught/g,'awt')
+    .replace(/igh/g,'y').replace(/tch/g,'ch')
+    .replace(/ee/g,'ee').replace(/oo/g,'oo')
+    .replace(/ea/g,'ee').replace(/oa/g,'oh').replace(/ai/g,'ay').replace(/ay\b/g,'ay')
+    .replace(/ou/g,'ow').replace(/ow\b/g,'oh')
+    .replace(/oi|oy/g,'oy').replace(/au|aw/g,'aw')
+    .replace(/ce/g,'se').replace(/ci/g,'si').replace(/cy/g,'sy')
+    .replace(/c/g,'k')
+    .replace(/([bcdfghjklmnpqrstvwxz])e\b/g,'$1') // silent final e
+    .replace(/y\b/g,'ee');
+  // uppercase as-is; keep it lowercase respelling
+  return s;
+}
+
 // Levenshtein edit distance for fuzzy pronunciation matching
 function editDist(a,b){
   const m=a.length, n=b.length;
@@ -1301,6 +1346,7 @@ function renderBiz(){
         <button class="vspeak" data-bsp="${i}">🔊</button>
         <button class="vmic" data-bmic="${i}">🎤</button>
       </div>
+      <div class="vphon">🗣️ ${respell(v.w)}</div>
       <div class="vmean">${v.m}</div>
       <div class="vex"><div class="vex-txt">"${v.ex}"</div><button class="vex-speak" data-bsp="${i}-e">🔊</button></div>
       <button class="vlearn ${srs[v.w]?'added':''}" data-blearn="${i}">${srs[v.w]?'✓ In Review':'+ Add to Review'}</button>
@@ -1357,6 +1403,7 @@ function renderVocab(){
             <button class="vmic" data-mic="${i}">🎤</button>
             <button class="mw-del" data-del="${i}">🗑️</button>
           </div>
+          <div class="vphon">🗣️ ${respell(v.w)}</div>
           <div class="vmean">${v.m}</div>
           <div class="vex"><div class="vex-txt">"${v.ex}"</div><button class="vex-speak" data-sp="${i}-e">🔊</button></div>
           <button class="vlearn ${srs[v.w]?'added':''}" data-learn="${i}">${srs[v.w]?'✓ In Review':'+ Add to Review'}</button>
@@ -1377,6 +1424,7 @@ function renderVocab(){
         <button class="vspeak" data-sp="${i}-w">🔊</button>
         <button class="vmic" data-mic="${i}">🎤</button>
       </div>
+      <div class="vphon">🗣️ ${respell(v.w)}</div>
       <div class="vmean">${v.m}</div>
       <div class="vex">
         <div class="vex-txt">"${v.ex}"</div>
