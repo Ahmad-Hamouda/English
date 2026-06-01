@@ -302,6 +302,7 @@
     <button class="tab" data-p="quiz">🧠 Quiz</button>
     <button class="tab" data-p="grammar">🔧 Grammar</button>
     <button class="tab" data-p="method">🎓 How to Learn</button>
+    <button class="tab" data-p="voice">🔊 Voice Settings</button>
   </div>
 
   <!-- TODAY -->
@@ -358,7 +359,6 @@
 
   <!-- VOCAB -->
   <div class="panel" id="p-vocab">
-    <div class="voice-box" id="voiceBox"></div>
     <div class="search-wrap">
       <span class="search-ico">🔍</span>
       <input class="search-input" id="vsearch" placeholder="Search any word, meaning, or example…" autocomplete="off">
@@ -397,6 +397,22 @@
   <!-- METHOD GUIDE -->
   <div class="panel" id="p-method">
     <div id="methodBox"></div>
+  </div>
+
+  <!-- VOICE SETTINGS -->
+  <div class="panel" id="p-voice">
+    <p class="sub" style="margin-bottom:14px">Choose the voice used everywhere in the app: accent, gender, speed. Pick by ear with the Test button.</p>
+    <div class="voice-box" id="voiceBox"></div>
+    <div class="tipbox" style="margin-top:14px">
+      <h3>📥 Want more voices (incl. male)?</h3>
+      <ul>
+        <li>Open phone <b>Settings</b> → search <b>"Text-to-speech"</b></li>
+        <li>Set engine to <b>Google Text-to-speech</b> (tap ⚙️)</li>
+        <li>Tap <b>Install voice data</b> → <b>English (US)</b> or <b>(UK)</b></li>
+        <li>Download several voices (Voice 1, 2, 3, 4…) — some are male</li>
+        <li>Reopen the app — they'll appear in the list above</li>
+      </ul>
+    </div>
   </div>
 
   <!-- GRAMMAR -->
@@ -939,7 +955,7 @@ document.getElementById('tabs').addEventListener('click',e=>{
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+b.dataset.p).classList.add('on');
   if(b.dataset.p==='quiz') startNewRound();
-  if(b.dataset.p==='vocab') renderVoiceControls();
+  if(b.dataset.p==='voice') renderVoiceControls();
   if(b.dataset.p==='review') startReview();
   if(b.dataset.p==='method') renderMethod();
   if(b.dataset.p==='today') renderToday();
