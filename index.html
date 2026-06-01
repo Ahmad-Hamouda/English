@@ -952,8 +952,8 @@ const SRS_INTERVALS=[1,3,7,14,30,90];
 let srs=JSON.parse(localStorage.getItem('srs')||'{}'); // {word:{level,due}}
 
 function saveSRS(){ localStorage.setItem('srs',JSON.stringify(srs)); }
-function todayStr(){ return new Date().toISOString().slice(0,10); }
-function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+function todayStr(){ return localDateStr(new Date()); }
+function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return localDateStr(d); }
 
 function srsAdd(word){
   if(!srs[word]){ srs[word]={level:0, due:todayStr()}; saveSRS(); } // due today for first review
@@ -1142,74 +1142,52 @@ function matchSearch(v){
   return v.w.toLowerCase().includes(q)||v.m.toLowerCase().includes(q)||v.ex.toLowerCase().includes(q);
 }
 
-/* ---------- TODAY (daily command center) ---------- */
-let selectedDay=todayStr(); // which day we're viewing; defaults to today
-function todayKey(){ return 'today_'+selectedDay; }
-let todayState=JSON.parse(localStorage.getItem(todayKey())||'{}');
-function saveToday(){ localStorage.setItem(todayKey(), JSON.stringify(todayState)); }
+/* ---------- TODAY (rolling lesson days) ---------- */
+// Lessons are numbered 1,2,3… (not tied to calendar dates).
+// Storage key per lesson: lesson_N. A lesson completes when all tasks done.
 
-// a day is unlocked only if it's the first lesson day, OR the previous day is fully complete
-function dayComplete(ds){
-  const st=JSON.parse(localStorage.getItem('today_'+ds)||'{}');
-  return TODAY_TASKS.every(t=>st[t.id]);
+function lessonKey(n){ return 'lesson_'+n; }
+function lessonState(n){ return JSON.parse(localStorage.getItem(lessonKey(n))||'{}'); }
+function lessonComplete(n){ const st=lessonState(n); return TODAY_TASKS.every(t=>st[t.id]); }
+
+// the earliest lesson the user has NOT finished (this is the "current" lesson)
+function firstIncompleteLesson(){
+  let n=1;
+  while(lessonComplete(n) && n<3650) n++;   // cap to avoid infinite loop
+  return n;
 }
-function isDayUnlocked(ds){
-  const idx=dayIndex(ds);
-  if(idx<=0) return true;
-  // today and any past day are always open; only FUTURE days can be locked
-  if(ds<=todayStr()) return true;
-  // a future day unlocks only if the day before it is fully complete
-  const prev=new Date(ds+'T00:00:00'); prev.setDate(prev.getDate()-1);
-  const prevStr=prev.toISOString().slice(0,10);
-  return dayComplete(prevStr);
+// a lesson is unlocked if it's lesson 1, or the previous lesson is complete
+function isLessonUnlocked(n){
+  if(n<=1) return true;
+  return lessonComplete(n-1);
+}
+
+let selectedLesson=firstIncompleteLesson(); // default: first day not yet finished
+let todayState=lessonState(selectedLesson);
+function saveToday(){ localStorage.setItem(lessonKey(selectedLesson), JSON.stringify(todayState)); }
+
+// format a Date as YYYY-MM-DD using LOCAL components (no UTC shift)
+function localDateStr(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), dd=String(d.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+dd;
 }
 
 // build the 7-day week (this week, Mon–Sun) for the picker
-function getWeekDays(){
-  const now=new Date();
-  const dow=(now.getDay()+6)%7; // 0=Mon
-  const monday=new Date(now); monday.setDate(now.getDate()-dow);
-  const days=[];
-  for(let i=0;i<7;i++){
-    const d=new Date(monday); d.setDate(monday.getDate()+i);
-    days.push(d);
-  }
-  return days;
-}
-
-// streak tracking
+// streak = how many consecutive completed lessons up to the current point
 function getStreak(){
-  let streak=0; let d=new Date();
-  // if today not complete yet, start counting from yesterday
-  for(let i=0;i<400;i++){
-    const key='today_'+d.toISOString().slice(0,10);
-    const st=JSON.parse(localStorage.getItem(key)||'{}');
-    const allDone=st.review&&st.wotd&&st.dialogue&&st.quiz&&st.speak;
-    if(allDone){ streak++; d.setDate(d.getDate()-1); }
-    else if(i===0){ d.setDate(d.getDate()-1); } // today incomplete, check from yesterday
-    else break;
-  }
+  let streak=0, n=1;
+  while(lessonComplete(n) && n<3650){ streak++; n++; }
   return streak;
 }
 
-// ---- Per-day content: each day gets its own slice of words + a dialogue ----
-function dayIndex(dateStr){
-  // days since a fixed anchor so each calendar day maps to a stable lesson number
-  const anchor=new Date('2026-06-01T00:00:00');
-  const d=new Date(dateStr+'T00:00:00');
-  return Math.max(0, Math.round((d-anchor)/86400000));
-}
-function getDayPlan(dateStr){
-  const idx=dayIndex(dateStr);
-  const a2=VOCAB.a2b1, b1=VOCAB.b1b2, link=VOCAB.connect;
-  // 10 words/day: rotate through a2b1 then b1b2 then connect, looping
-  const allWords=[...a2,...b1,...link];
+// ---- Per-lesson content: each lesson gets its own slice of words + dialogue ----
+function getLessonPlan(n){
+  const idx=n-1; // lesson 1 → index 0
+  const allWords=[...VOCAB.a2b1, ...VOCAB.b1b2, ...VOCAB.connect];
   const wStart=(idx*10)%allWords.length;
   const words=[];
   for(let i=0;i<10;i++) words.push(allWords[(wStart+i)%allWords.length]);
-  // one dialogue per day, looping through the list
   const dialogue=DIALOGUES[idx%DIALOGUES.length];
-  // one grammar point per day
   const grammar=GRAMMAR[idx%GRAMMAR.length];
   return {idx, words, dialogue, grammar};
 }
@@ -1224,50 +1202,50 @@ const TODAY_TASKS=[
 ];
 
 function renderToday(){
-  todayState=JSON.parse(localStorage.getItem(todayKey())||'{}');
+  todayState=lessonState(selectedLesson);
   const box=document.getElementById('todayBox');
   const dueN=getDueWords().length;
   const doneCount=TODAY_TASKS.filter(t=>todayState[t.id]).length;
   const pct=Math.round(doneCount/TODAY_TASKS.length*100);
   const streak=getStreak();
 
-  // the day being viewed
-  const sel=new Date(selectedDay+'T00:00:00');
-  const isToday = selectedDay===todayStr();
+  const current=firstIncompleteLesson();        // the lesson the user is "on"
+  const isCurrent = selectedLesson===current;
   const hr=new Date().getHours();
   const greet=hr<12?'Good morning':hr<18?'Good afternoon':'Good evening';
-  const dateStr=sel.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 
-  // ---- DAY PICKER (this week) ----
-  const week=getWeekDays();
-  const wkLabels=['M','T','W','T','F','S','S'];
+  // ---- ROLLING 7-LESSON PICKER ----
+  // window starts at the current lesson and shows 7 ahead; always 7 slots.
+  // (if user has scrolled back to review an earlier lesson, keep current in view)
+  let winStart=current;
+  if(selectedLesson<winStart) winStart=selectedLesson; // include the one being viewed
   let picker='<div class="day-picker">';
-  week.forEach((d,i)=>{
-    const ds=d.toISOString().slice(0,10);
-    const st=JSON.parse(localStorage.getItem('today_'+ds)||'{}');
-    const allDone=TODAY_TASKS.every(t=>st[t.id]);
-    const isSel=ds===selectedDay;
-    const isTod=ds===todayStr();
-    const locked=!isDayUnlocked(ds);
-    let cls='day-pick'; if(isSel) cls+=' sel'; if(allDone) cls+=' complete'; if(locked) cls+=' locked';
-    picker+='<button class="'+cls+'" '+(locked?'data-locked="1"':'data-day="'+ds+'"')+'>'+
-      '<span class="dp-dow">'+wkLabels[i]+'</span>'+
-      '<span class="dp-num">'+(locked?'🔒':d.getDate())+'</span>'+
-      (isTod?'<span class="dp-today">•</span>':'')+
+  for(let k=0;k<7;k++){
+    const n=winStart+k;
+    const done=lessonComplete(n);
+    const isSel=n===selectedLesson;
+    const isCur=n===current;
+    const locked=!isLessonUnlocked(n);
+    let cls='day-pick'; if(isSel) cls+=' sel'; if(done) cls+=' complete'; if(locked) cls+=' locked';
+    picker+='<button class="'+cls+'" '+(locked?'data-locked="1"':'data-lesson="'+n+'"')+'>'+
+      '<span class="dp-dow">Day</span>'+
+      '<span class="dp-num">'+(locked?'🔒':n)+'</span>'+
+      (isCur?'<span class="dp-today">•</span>':'')+
       '</button>';
-  });
+  }
   picker+='</div>';
-  picker+='<div class="lock-msg" id="lockMsg">🔒 Finish the previous day first to unlock this one.</div>';
-  const plan=getDayPlan(selectedDay);
-  const wod=plan.words[0]; // word of the day = first word of the day's set
+  picker+='<div class="lock-msg" id="lockMsg">🔒 Finish the current day first to unlock this one.</div>';
+
+  const plan=getLessonPlan(selectedLesson);
+  const wod=plan.words[0];
 
   // progress ring
   const r=26, circ=2*Math.PI*r, off=circ*(1-pct/100);
 
   let html=picker;
   html+='<div class="today-head">'+
-    '<div class="today-date">'+(isToday?'🌅 Today · ':'')+dateStr+' · <span style="color:var(--pur)">Day '+(plan.idx+1)+'</span></div>'+
-    '<div class="today-greet">'+(isToday?greet+'! 👋':'Plan for this day')+'</div></div>';
+    '<div class="today-date">'+(isCurrent?'🌅 Today · ':'')+'<span style="color:var(--pur)">Day '+selectedLesson+'</span></div>'+
+    '<div class="today-greet">'+(isCurrent?greet+'! 👋':'Reviewing Day '+selectedLesson)+'</div></div>';
 
   html+='<div class="today-prog-wrap">'+
     '<div class="ring"><svg width="62" height="62">'+
@@ -1278,7 +1256,7 @@ function renderToday(){
       '<div class="t2">'+(pct===100?'🎉 You finished your hour today!':'Keep going — you\'ve got this.')+'</div></div>'+
     '</div>';
 
-  if(streak>0 && isToday) html+='<div class="today-streak">🔥 '+streak+'-day streak — don\'t break it!</div>';
+  if(streak>0 && isCurrent) html+='<div class="today-streak">🔥 '+streak+'-day streak — don\'t break it!</div>';
 
   function sp(txt){ return '<button class="t-spk" onclick="speak('+JSON.stringify(txt).replace(/"/g,'&quot;')+', this)">🔊</button>'; }
   function mic(txt,id){ return '<button class="t-mic" data-tmic="'+id+'" data-tmtext="'+txt.replace(/"/g,'&quot;')+'">🎤</button>'; }
@@ -1346,8 +1324,8 @@ function renderToday(){
 }
 
 document.getElementById('todayBox').addEventListener('click',e=>{
-  const day=e.target.closest('[data-day]');
-  if(day){ selectedDay=day.dataset.day; renderToday(); return; }
+  const day=e.target.closest('[data-lesson]');
+  if(day){ selectedLesson=+day.dataset.lesson; renderToday(); return; }
   const lockedDay=e.target.closest('[data-locked]');
   if(lockedDay){
     const box=document.getElementById('lockMsg');
@@ -1373,7 +1351,7 @@ document.getElementById('todayBox').addEventListener('click',e=>{
   }
   // play whole dialogue for the day
   const tdia=e.target.closest('[data-tdiaplay]');
-  if(tdia){ const plan=getDayPlan(selectedDay); playWholeDialogue(tdia, plan.dialogue); return; }
+  if(tdia){ const plan=getLessonPlan(selectedLesson); playWholeDialogue(tdia, plan.dialogue); return; }
 
   const goto=e.target.closest('[data-goto]');
   if(goto){ document.querySelector('[data-p="'+goto.dataset.goto+'"]').click(); return; }
