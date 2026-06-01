@@ -1,4 +1,4 @@
-const CACHE = 'english-a2b2-v1';
+const CACHE = 'english-a2b2-v2';
 const ASSETS = [
   './',
   'index.html',
@@ -9,7 +9,8 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  self.skipWaiting();
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)));
 });
 
 self.addEventListener('activate', (e) => {
@@ -21,7 +22,17 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  e.respondWith(
-    caches.match(e.request).then((cached) => cached || fetch(e.request).catch(() => cached))
-  );
+  const url = new URL(e.request.url);
+  const isPage = e.request.mode === 'navigate' || url.pathname.endsWith('index.html') || url.pathname.endsWith('/');
+  if (isPage) {
+    e.respondWith(
+      fetch(e.request).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE).then((c) => c.put(e.request, copy));
+        return res;
+      }).catch(() => caches.match(e.request).then((m) => m || caches.match('index.html')))
+    );
+  } else {
+    e.respondWith(caches.match(e.request).then((m) => m || fetch(e.request)));
+  }
 });
