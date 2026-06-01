@@ -1215,10 +1215,12 @@ function renderToday(){
   const greet=hr<12?'Good morning':hr<18?'Good afternoon':'Good evening';
 
   // ---- ROLLING 7-LESSON PICKER ----
-  // window starts at the current lesson and shows 7 ahead; always 7 slots.
-  // (if user has scrolled back to review an earlier lesson, keep current in view)
-  let winStart=current;
-  if(selectedLesson<winStart) winStart=selectedLesson; // include the one being viewed
+  // Window: show a few completed days behind the current one (so you can review them),
+  // then the current day, then locked days ahead. Always 7 slots, never starts below 1.
+  const BEHIND=2; // how many finished days to keep visible behind current
+  let winStart=Math.max(1, current-BEHIND);
+  // if user tapped an even earlier day, scroll the window back to include it
+  if(selectedLesson<winStart) winStart=selectedLesson;
   let picker='<div class="day-picker">';
   for(let k=0;k<7;k++){
     const n=winStart+k;
