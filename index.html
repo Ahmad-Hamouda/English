@@ -77,10 +77,24 @@
   /* vocab cards */
   .levelpick{display:flex;gap:6px;margin-bottom:16px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
   .levelpick::-webkit-scrollbar{display:none}
-  #bizpick .lp{flex:0 0 auto;padding:9px 14px;white-space:nowrap}
+  .biz-cat-label{font-size:10px;font-weight:700;letter-spacing:2px;color:var(--mut);margin-bottom:10px}
+  /* business english category cards */
+  #bizpick{display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;padding:2px 2px 10px;margin-bottom:16px;scroll-snap-type:x mandatory}
+  #bizpick::-webkit-scrollbar{display:none}
+  .biz-cat{flex:0 0 auto;width:130px;scroll-snap-align:start;display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:15px 14px;border-radius:16px;border:1px solid var(--bd);background:linear-gradient(160deg,var(--card),var(--surf));color:var(--tx2);cursor:pointer;text-align:left;font-family:'DM Sans',sans-serif;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:all .22s var(--ease)}
+  .biz-cat::after{content:'';position:absolute;inset:0;background:linear-gradient(160deg,rgba(232,168,56,.14),transparent 60%);opacity:0;transition:opacity .22s var(--ease)}
+  .biz-cat:hover{transform:translateY(-2px);border-color:var(--bd2)}
+  .biz-cat-ico{font-size:24px;margin-bottom:4px}
+  .biz-cat-name{font-family:'Fraunces',serif;font-size:15px;font-weight:600;line-height:1.2;color:var(--tx)}
+  .biz-cat-count{font-size:11px;color:var(--mut);font-weight:500}
+  .biz-cat.on{border-color:var(--gold);box-shadow:0 6px 20px rgba(232,168,56,.22)}
+  .biz-cat.on::after{opacity:1}
+  .biz-cat.on .biz-cat-name{color:var(--gold)}
   .lp{flex:1;padding:9px 0;border-radius:10px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);font-weight:700;font-size:13px;cursor:pointer;transition:all .2s var(--ease)}
   .lp:hover{border-color:var(--bd2);color:var(--tx2)}
   .lp.on{background:rgba(232,168,56,.12);border-color:var(--gold);color:var(--gold)}
+  .lp-count{display:inline-block;background:rgba(255,255,255,.06);border-radius:100px;padding:1px 7px;font-size:10px;font-weight:700;margin-left:3px;vertical-align:middle}
+  .lp.on .lp-count{background:rgba(232,168,56,.25)}
   .lp.on{background:var(--pur);color:#000;border-color:var(--pur)}
 
   .vrow{background:var(--card);border:1px solid var(--bd);border-radius:var(--radius-sm);padding:15px 16px;margin-bottom:10px;box-shadow:var(--shadow);transition:border-color .2s var(--ease)}
@@ -409,13 +423,7 @@
       <span class="search-ico">🔍</span>
       <input class="search-input" id="vsearch" placeholder="Search any word, meaning, or example…" autocomplete="off">
     </div>
-    <div class="levelpick" id="levelpick">
-      <button class="lp on" data-l="a2b1">A2 → B1 core</button>
-      <button class="lp" data-l="b1b2">B1 → B2 core</button>
-      <button class="lp" data-l="connect">Linking words</button>
-      <button class="lp" data-l="phrasal">Phrasal verbs</button>
-      <button class="lp" data-l="mine">⭐ My Words</button>
-    </div>
+    <div class="levelpick" id="levelpick"></div>
     <div class="speak-unsupported" id="ttsUnsupported">⚠️ Speech not supported here</div>
     <p class="ttsnote">🔊 hear it · 🎤 tap & speak → instant pronunciation check · 🇺🇸 US male</p>
     <div id="vocabList"></div>
@@ -423,8 +431,9 @@
 
   <!-- BUSINESS ENGLISH -->
   <div class="panel" id="p-biz">
-    <p class="sub" style="margin-bottom:12px">Real phrases used in the workplace. Pick a field, then listen 🔊 and practice 🎤 each phrase.</p>
-    <div class="levelpick" id="bizpick"></div>
+    <p class="sub" style="margin-bottom:14px">Real phrases used in the workplace. Pick a field, then listen 🔊 and practice 🎤 each phrase.</p>
+    <div class="biz-cat-label">CHOOSE A FIELD →</div>
+    <div id="bizpick"></div>
     <div id="bizList"></div>
   </div>
 
@@ -1271,8 +1280,17 @@ function deleteMyWord(i){ VOCAB.mine.splice(i,1); saveMyWords(); }
 /* ---------- BUSINESS ENGLISH ---------- */
 let bizField='meetings';
 function renderBizPick(){
-  document.getElementById('bizpick').innerHTML=Object.keys(BIZ).map(k=>
-    '<button class="lp '+(k===bizField?'on':'')+'" data-bf="'+k+'">'+BIZ[k].label+'</button>').join('');
+  const icons={meetings:'📊', emails:'✉️', negotiation:'🤝', pm:'📋', calls:'📞', finance:'💰'};
+  document.getElementById('bizpick').innerHTML=Object.keys(BIZ).map(k=>{
+    // strip the leading emoji from label to get clean name
+    const name=BIZ[k].label.replace(/^\S+\s/,'');
+    const count=BIZ[k].items.length;
+    return '<button class="biz-cat '+(k===bizField?'on':'')+'" data-bf="'+k+'">'+
+      '<span class="biz-cat-ico">'+(icons[k]||'💼')+'</span>'+
+      '<span class="biz-cat-name">'+name+'</span>'+
+      '<span class="biz-cat-count">'+count+' phrases</span>'+
+      '</button>';
+  }).join('');
 }
 function renderBiz(){
   const items=BIZ[bizField].items;
@@ -1307,6 +1325,14 @@ document.getElementById('bizList').addEventListener('click',e=>{
     speak(kind==='e'?v.ex:v.w, sp); return; }
 });
 
+function renderLevelPick(){
+  const labels={a2b1:'A2 → B1 core', b1b2:'B1 → B2 core', connect:'Linking words', phrasal:'Phrasal verbs', mine:'⭐ My Words'};
+  document.getElementById('levelpick').innerHTML=Object.keys(labels).map(k=>{
+    const n=(VOCAB[k]||[]).length;
+    return '<button class="lp '+(k===curLevel?'on':'')+'" data-l="'+k+'">'+labels[k]+
+      ' <span class="lp-count">'+n+'</span></button>';
+  }).join('');
+}
 function renderVocab(){
   const list=document.getElementById('vocabList');
   // My Words section: add-form + saved words with delete
@@ -1375,8 +1401,7 @@ function renderVocab(){
 }
 document.getElementById('levelpick').addEventListener('click',e=>{
   const b=e.target.closest('.lp'); if(!b) return;
-  document.querySelectorAll('.lp').forEach(x=>x.classList.remove('on'));
-  b.classList.add('on'); curLevel=b.dataset.l; renderVocab();
+  curLevel=b.dataset.l; renderLevelPick(); renderVocab();
 });
 document.getElementById('vsearch').addEventListener('input',function(){
   searchTerm=this.value.trim(); renderVocab();
@@ -1394,14 +1419,14 @@ document.getElementById('vocabList').addEventListener('click',e=>{
     const w=document.getElementById('mwWord').value;
     const m=document.getElementById('mwMean').value;
     const ex=document.getElementById('mwEx').value;
-    if(addMyWord(w,m,ex)){ renderVocab(); }
+    if(addMyWord(w,m,ex)){ renderLevelPick(); renderVocab(); }
     else { alert('Please enter both a word and its meaning.'); }
     return;
   }
   // delete a user word
   const del=e.target.closest('[data-del]');
   if(del){
-    if(confirm('Delete this word?')){ deleteMyWord(+del.dataset.del); renderVocab(); }
+    if(confirm('Delete this word?')){ deleteMyWord(+del.dataset.del); renderLevelPick(); renderVocab(); }
     return;
   }
   const learn=e.target.closest('[data-learn]');
@@ -1474,7 +1499,7 @@ document.getElementById('weekrow').addEventListener('click',e=>{
 let curDia=DIALOGUES[0].id;
 function renderDiaPick(){
   document.getElementById('diapick').innerHTML=DIALOGUES.map(d=>
-    `<button class="lp ${d.id===curDia?'on':''}" data-d="${d.id}" style="flex:0 0 auto;padding:9px 14px">${d.title}</button>`
+    `<button class="lp ${d.id===curDia?'on':''}" data-d="${d.id}" style="flex:0 0 auto;padding:9px 14px">${d.title} <span class="lp-count">${d.lines.length}</span></button>`
   ).join('');
 }
 function renderDia(){
@@ -2146,7 +2171,7 @@ document.getElementById('todayBox').addEventListener('click',e=>{
 });
 
 renderWOTD(); startNewRound(); renderVoiceControls(); renderBizPick(); renderBiz();
-renderVocab(); renderWeek(); renderDiaPick(); renderDia();
+renderLevelPick(); renderVocab(); renderWeek(); renderDiaPick(); renderDia();
 selectedLesson=firstIncompleteLesson(); todayState=lessonState(selectedLesson);
 updateDueBadge(); renderMethod(); renderToday();
 </script>
