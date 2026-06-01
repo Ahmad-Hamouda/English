@@ -1162,8 +1162,8 @@ function isLessonUnlocked(n){
   return lessonComplete(n-1);
 }
 
-let selectedLesson=firstIncompleteLesson(); // default: first day not yet finished
-let todayState=lessonState(selectedLesson);
+let selectedLesson=1; // set properly at init (after TODAY_TASKS is defined)
+let todayState={};
 function saveToday(){ localStorage.setItem(lessonKey(selectedLesson), JSON.stringify(todayState)); }
 
 // format a Date as YYYY-MM-DD using LOCAL components (no UTC shift)
@@ -1366,6 +1366,7 @@ document.getElementById('todayBox').addEventListener('click',e=>{
 
 renderWOTD(); newQuiz();
 renderVocab(); renderWeek(); renderDiaPick(); renderDia();
+selectedLesson=firstIncompleteLesson(); todayState=lessonState(selectedLesson);
 updateDueBadge(); renderMethod(); renderToday();
 </script>
 </body>
