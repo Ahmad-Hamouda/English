@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A2 → B2 English Plan</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@400;600;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0e1016; --surf:#171a24; --card:#1f2330; --bd:#2c3142;
+    --gold:#f0a500; --grn:#4fc3a1; --red:#e05a5a; --pur:#7b8cff; --blu:#5aa9e0;
+    --tx:#eef0f8; --mut:#8890aa;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--tx);font-family:'DM Sans',sans-serif;min-height:100vh;-webkit-tap-highlight-color:transparent}
+  body::before{content:'';position:fixed;top:-180px;left:-160px;width:520px;height:520px;background:radial-gradient(circle,rgba(240,165,0,.08),transparent 70%);pointer-events:none}
+  body::after{content:'';position:fixed;bottom:-180px;right:-160px;width:460px;height:460px;background:radial-gradient(circle,rgba(79,195,161,.07),transparent 70%);pointer-events:none}
+  .wrap{max-width:760px;margin:0 auto;padding:0 14px 50px;position:relative;z-index:1}
+
+  header{text-align:center;padding:34px 8px 18px}
+  .badge{display:inline-block;background:rgba(240,165,0,.12);border:1px solid rgba(240,165,0,.3);color:var(--gold);font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:5px 16px;border-radius:100px;margin-bottom:14px}
+  h1{font-family:'Fraunces',serif;font-size:clamp(26px,7vw,42px);font-weight:900;line-height:1.1;margin-bottom:10px;background:linear-gradient(135deg,#eef0f8,#f0a500);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .sub{color:var(--mut);font-size:14px;max-width:440px;margin:0 auto;line-height:1.6}
+
+  /* level path */
+  .path{display:flex;align-items:center;justify-content:center;gap:6px;margin:22px 0 8px;flex-wrap:wrap}
+  .lvl{padding:7px 16px;border-radius:100px;font-weight:700;font-size:13px;border:1px solid var(--bd);background:var(--surf);color:var(--mut)}
+  .lvl.now{background:var(--gold);color:#000;border-color:var(--gold)}
+  .lvl.goal{background:rgba(79,195,161,.15);color:var(--grn);border-color:var(--grn)}
+  .arrow{color:var(--mut);font-size:16px}
+  .timeline{color:var(--mut);font-size:12px;text-align:center;margin-bottom:24px}
+
+  .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:20px;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{flex:0 0 auto;padding:10px 18px;border-radius:12px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px}
+  .tab.on{background:var(--gold);color:#000;border-color:var(--gold)}
+
+  .panel{display:none;animation:fade .3s ease}
+  .panel.on{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+  /* daily plan */
+  .block{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:18px;margin-bottom:12px;position:relative;overflow:hidden}
+  .block::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--bc,var(--gold))}
+  .block-h{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .block-time{margin-left:auto;background:var(--surf);border:1px solid var(--bd);color:var(--mut);font-size:11px;font-weight:700;padding:3px 10px;border-radius:100px}
+  .block-icon{font-size:20px}
+  .block-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600}
+  .block-desc{color:var(--mut);font-size:13px;line-height:1.6}
+  .block-desc b{color:var(--tx);font-weight:600}
+
+  .tipbox{background:rgba(90,169,224,.08);border:1px solid rgba(90,169,224,.25);border-radius:14px;padding:16px;margin:8px 0 18px}
+  .tipbox h3{font-size:13px;color:var(--blu);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  .tipbox ul{list-style:none;font-size:13px;color:var(--mut);line-height:1.8}
+  .tipbox li::before{content:'→ ';color:var(--blu)}
+
+  /* week tracker */
+  .weekrow{display:flex;gap:6px;justify-content:center;margin:6px 0 22px;flex-wrap:wrap}
+  .day{width:42px;height:42px;border-radius:12px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+  .day.done{background:var(--grn);color:#000;border-color:var(--grn)}
+
+  /* vocab cards */
+  .levelpick{display:flex;gap:6px;margin-bottom:16px}
+  .lp{flex:1;padding:9px 0;border-radius:10px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);font-weight:700;font-size:13px;cursor:pointer}
+  .lp.on{background:var(--pur);color:#000;border-color:var(--pur)}
+
+  .vrow{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+  .vtop{display:flex;align-items:center;gap:10px}
+  .vword{font-family:'Fraunces',serif;font-size:19px;font-weight:600;color:var(--tx)}
+  .vpos{font-size:11px;color:var(--gold);background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.2);padding:2px 8px;border-radius:100px}
+  .vspeak{margin-left:auto;width:38px;height:34px;border-radius:9px;border:1px solid rgba(240,165,0,.35);background:var(--surf);color:var(--gold);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .vmic{width:38px;height:34px;border-radius:9px;border:1px solid rgba(123,140,255,.4);background:var(--surf);color:var(--pur);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-left:6px}
+  .vmic.rec{background:rgba(224,90,90,.18);border-color:var(--red);color:var(--red);animation:pulse .8s infinite}
+  .mic-result{margin-top:9px;font-size:13px;line-height:1.5;display:none}
+  .mic-result.show{display:block}
+  .mic-result .ok{color:var(--grn);font-weight:700}
+  .mic-result .bad{color:var(--red);font-weight:700}
+  .mic-result .heard{color:var(--mut)}
+  .mic-result .heard b{color:var(--tx)}
+  .mic-input-wrap{display:flex;gap:6px;margin-top:9px}
+  .mic-input{flex:1;min-width:0;background:var(--surf);border:1px solid rgba(123,140,255,.4);color:var(--tx);border-radius:9px;padding:9px 11px;font-size:14px;font-family:'DM Sans',sans-serif;outline:none}
+  .mic-input:focus{border-color:var(--pur)}
+  .mic-check{flex:0 0 auto;background:var(--pur);color:#000;border:none;border-radius:9px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .vspeak.sp{background:rgba(240,165,0,.15);border-color:var(--gold);animation:pulse .9s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+  .vmean{color:var(--mut);font-size:13px;margin-top:7px;line-height:1.5}
+  .vex{margin-top:9px;padding-top:9px;border-top:1px solid var(--bd);display:flex;align-items:flex-start;gap:8px}
+  .vex-txt{font-family:'Fraunces',serif;font-size:14px;font-style:italic;color:var(--tx);line-height:1.5;flex:1}
+  .vex-speak{flex:0 0 auto;width:32px;height:30px;border-radius:8px;border:1px solid rgba(79,195,161,.3);background:var(--surf);color:var(--grn);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+  .vex-speak.sp{background:rgba(79,195,161,.15);border-color:var(--grn);animation:pulse .9s infinite}
+
+  .ttsnote{text-align:center;font-size:11px;color:var(--mut);margin-bottom:14px}
+  .grambox{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:10px}
+  .grambox h4{font-family:'Fraunces',serif;font-size:16px;margin-bottom:6px;color:var(--gold)}
+  .grambox p{color:var(--mut);font-size:13px;line-height:1.6}
+  .grambox .eg{color:var(--tx);font-style:italic;margin-top:6px;font-size:13px}
+
+  footer{text-align:center;color:var(--mut);font-size:12px;padding:24px 0 0;border-top:1px solid var(--bd);margin-top:20px}
+  .speak-unsupported{display:none;color:var(--red);font-size:12px;text-align:center;margin-bottom:10px}
+
+  /* dialogues */
+  .dia-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin:4px 0 4px}
+  .dia-play{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:100px;border:1px solid rgba(240,165,0,.35);background:rgba(240,165,0,.08);color:var(--gold);font-size:13px;font-weight:600;cursor:pointer;margin-bottom:14px;font-family:'DM Sans',sans-serif}
+  .dia-play.sp{background:rgba(240,165,0,.18);border-color:var(--gold)}
+  .line{display:flex;gap:10px;margin-bottom:8px;align-items:flex-start}
+  .line.b{flex-direction:row-reverse}
+  .bubble{max-width:78%;padding:11px 14px;border-radius:16px;font-size:14px;line-height:1.5;font-family:'Fraunces',serif}
+  .line.a .bubble{background:var(--card);border:1px solid var(--bd);border-bottom-left-radius:5px}
+  .line.b .bubble{background:rgba(123,140,255,.12);border:1px solid rgba(123,140,255,.3);border-bottom-right-radius:5px}
+  .who{font-size:10px;color:var(--mut);font-weight:700;letter-spacing:1px;margin-bottom:3px;text-transform:uppercase}
+  .line-speak{flex:0 0 auto;width:34px;height:32px;border-radius:9px;border:1px solid rgba(79,195,161,.3);background:var(--surf);color:var(--grn);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:4px}
+  .line-speak.sp{background:rgba(79,195,161,.15);border-color:var(--grn);animation:pulse .9s infinite}
+  .line-mic{flex:0 0 auto;width:34px;height:32px;border-radius:9px;border:1px solid rgba(123,140,255,.4);background:var(--surf);color:var(--pur);font-size:13px;cursor:pointer;display:flex;align-items:center;justify-content:center;margin-top:4px}
+  .line-mic.rec{background:rgba(224,90,90,.18);border-color:var(--red);color:var(--red);animation:pulse .8s infinite}
+</style>
+  <meta name="theme-color" content="#0e1016">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch(()=>{});
+      });
+    }
+  </script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="badge">🎯 Personalized Study Plan</div>
+    <h1>A2 → B2 in<br>1 Hour a Day</h1>
+    <p class="sub">Your structured roadmap with the most common words, real sentences, and 🇺🇸 American male voice you can repeat aloud.</p>
+
+    <div class="path">
+      <span class="lvl now">A2 (now)</span>
+      <span class="arrow">→</span>
+      <span class="lvl">B1</span>
+      <span class="arrow">→</span>
+      <span class="lvl goal">B2 (goal)</span>
+    </div>
+    <div class="timeline">⏱️ Realistic timeline: 6–9 months at 1 hour daily · ~2,500 new words to learn</div>
+  </header>
+
+  <div class="tabs" id="tabs">
+    <button class="tab on" data-p="plan">📅 Daily Plan</button>
+    <button class="tab" data-p="week">✅ Week Tracker</button>
+    <button class="tab" data-p="vocab">📚 Common Words</button>
+    <button class="tab" data-p="dialogues">💬 Dialogues</button>
+    <button class="tab" data-p="grammar">🔧 Grammar Path</button>
+  </div>
+
+  <!-- DAILY PLAN -->
+  <div class="panel on" id="p-plan">
+    <div class="block" style="--bc:var(--gold)">
+      <div class="block-h"><span class="block-icon">📚</span><span class="block-title">Vocabulary</span><span class="block-time">15 min</span></div>
+      <div class="block-desc">Learn <b>10 new words</b> from the Common Words tab. Say each word and its example sentence <b>out loud 3 times</b>. Write one new sentence of your own using each word.</div>
+    </div>
+    <div class="block" style="--bc:var(--grn)">
+      <div class="block-h"><span class="block-icon">🎧</span><span class="block-title">Listening</span><span class="block-time">15 min</span></div>
+      <div class="block-desc">Watch/listen to content <b>slightly above your level</b>. Great free options: <b>BBC Learning English</b>, <b>EnglishClass101 (YouTube)</b>, <b>easy podcasts</b>. Use English subtitles, not Arabic.</div>
+    </div>
+    <div class="block" style="--bc:var(--pur)">
+      <div class="block-h"><span class="block-icon">🗣️</span><span class="block-title">Speaking (Shadowing)</span><span class="block-time">15 min</span></div>
+      <div class="block-desc">Pick 5 sentences. Play the audio, then <b>repeat immediately copying the rhythm</b>. Record yourself on your phone and compare. This is the fastest way to sound natural.</div>
+    </div>
+    <div class="block" style="--bc:var(--blu)">
+      <div class="block-h"><span class="block-icon">📖</span><span class="block-title">Reading + Grammar</span><span class="block-time">15 min</span></div>
+      <div class="block-desc">Read one short article (try <b>News in Levels</b>, level 2→3). Underline new words. Then study <b>one grammar point</b> from the Grammar Path tab.</div>
+    </div>
+
+    <div class="tipbox">
+      <h3>🔑 Rules that actually work</h3>
+      <ul>
+        <li>Consistency beats intensity — 1 hour daily &gt; 7 hours on Sunday</li>
+        <li>Speak out loud every day, even alone — fluency is a muscle</li>
+        <li>Learn words inside <b>sentences</b>, never as isolated lists</li>
+        <li>Review yesterday's 10 words before learning today's</li>
+        <li>Don't fear mistakes — they are how the brain learns</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- WEEK TRACKER -->
+  <div class="panel" id="p-week">
+    <p class="sub" style="margin-bottom:14px">Tap each day you complete your hour. Build the streak — your progress saves automatically.</p>
+    <div class="weekrow" id="weekrow"></div>
+    <div class="tipbox">
+      <h3>📈 Weekly milestones</h3>
+      <ul>
+        <li>Week 1–4: nail the daily habit + 280 new words</li>
+        <li>Month 2–3: you reach solid B1 — can hold simple conversations</li>
+        <li>Month 4–6: complex sentences, opinions, past/future fluency</li>
+        <li>Month 6–9: B2 — you discuss most topics comfortably</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- VOCAB -->
+  <div class="panel" id="p-vocab">
+    <div class="levelpick" id="levelpick">
+      <button class="lp on" data-l="a2b1">A2 → B1 core</button>
+      <button class="lp" data-l="b1b2">B1 → B2 core</button>
+      <button class="lp" data-l="connect">Linking words</button>
+    </div>
+    <div class="speak-unsupported" id="ttsUnsupported">⚠️ Speech not supported here</div>
+    <p class="ttsnote">🔊 hear it · 🎤 opens a box → use your keyboard's mic to say it & check · offline</p>
+    <div id="vocabList"></div>
+  </div>
+
+  <!-- DIALOGUES -->
+  <div class="panel" id="p-dialogues">
+    <p class="sub" style="margin-bottom:14px">Real B1–B2 conversations for <b>shadowing</b>: play a line, then repeat it copying the rhythm. Practice both roles.</p>
+    <div class="levelpick" id="diapick"></div>
+    <p class="ttsnote">🔊 hear a line · 🎤 opens a box → keyboard mic to say it & check · 🎬 play all</p>
+    <div id="diaList"></div>
+  </div>
+
+  <!-- GRAMMAR -->
+  <div class="panel" id="p-grammar">
+    <p class="sub" style="margin-bottom:16px">The grammar you must master to move from A2 to B2, in the right order.</p>
+    <div id="gramList"></div>
+  </div>
+
+  <footer>Practice daily. Speak out loud. You will reach B2. 🌟</footer>
+</div>
+
+<script>
+/* ---------- DATA ---------- */
+const VOCAB = {
+  a2b1: [
+    {w:"although", pos:"conj", m:"in spite of the fact that", ex:"Although it was raining, we went out."},
+    {w:"however", pos:"adv", m:"but / nevertheless", ex:"I was tired; however, I finished the work."},
+    {w:"decide", pos:"verb", m:"to make a choice", ex:"I decided to study English every day."},
+    {w:"improve", pos:"verb", m:"to get better", ex:"My English is improving little by little."},
+    {w:"experience", pos:"noun", m:"knowledge from doing things", ex:"She has a lot of work experience."},
+    {w:"opportunity", pos:"noun", m:"a chance to do something", ex:"This job is a great opportunity for me."},
+    {w:"suggest", pos:"verb", m:"to offer an idea", ex:"I suggest we leave early."},
+    {w:"prefer", pos:"verb", m:"to like one thing more", ex:"I prefer tea to coffee."},
+    {w:"realize", pos:"verb", m:"to suddenly understand", ex:"I realized I forgot my keys."},
+    {w:"available", pos:"adj", m:"free / able to be used", ex:"Are you available tomorrow?"},
+    {w:"according to", pos:"phrase", m:"as stated by", ex:"According to the news, it will rain."},
+    {w:"instead of", pos:"phrase", m:"in place of", ex:"Let's walk instead of driving."},
+    {w:"manage", pos:"verb", m:"to succeed in doing something hard", ex:"I managed to finish on time."},
+    {w:"recommend", pos:"verb", m:"to advise something good", ex:"I recommend this restaurant."},
+    {w:"describe", pos:"verb", m:"to say what something is like", ex:"Can you describe your house?"},
+    {w:"explain", pos:"verb", m:"to make something clear", ex:"Please explain the rules to me."},
+    {w:"arrange", pos:"verb", m:"to plan or organize", ex:"I arranged a meeting for Monday."},
+    {w:"complain", pos:"verb", m:"to say you are unhappy", ex:"He complained about the noise."},
+    {w:"borrow", pos:"verb", m:"to take and return later", ex:"Can I borrow your pen?"},
+    {w:"lend", pos:"verb", m:"to give for a short time", ex:"She lent me her car."},
+    {w:"notice", pos:"verb", m:"to see or become aware", ex:"I noticed a mistake in the text."},
+    {w:"offer", pos:"verb", m:"to give the chance to have", ex:"They offered me a new job."},
+    {w:"accept", pos:"verb", m:"to say yes to something", ex:"I accepted his invitation."},
+    {w:"refuse", pos:"verb", m:"to say no", ex:"She refused to help."},
+    {w:"avoid", pos:"verb", m:"to keep away from", ex:"I avoid eating too much sugar."},
+    {w:"allow", pos:"verb", m:"to let something happen", ex:"They don't allow smoking here."},
+    {w:"continue", pos:"verb", m:"to keep going", ex:"Please continue with your story."},
+    {w:"increase", pos:"verb", m:"to become bigger", ex:"Prices increased last year."},
+    {w:"reduce", pos:"verb", m:"to make smaller", ex:"We need to reduce costs."},
+    {w:"provide", pos:"verb", m:"to give what is needed", ex:"The hotel provides free breakfast."},
+    {w:"receive", pos:"verb", m:"to get something", ex:"I received your message."},
+    {w:"reach", pos:"verb", m:"to arrive at", ex:"We reached the city at night."},
+    {w:"discover", pos:"verb", m:"to find for the first time", ex:"Scientists discovered a new planet."},
+    {w:"prepare", pos:"verb", m:"to get ready", ex:"I'm preparing dinner now."},
+    {w:"prevent", pos:"verb", m:"to stop something happening", ex:"Exercise prevents many diseases."},
+    {w:"require", pos:"verb", m:"to need", ex:"This job requires good English."},
+    {w:"affect", pos:"verb", m:"to change or influence", ex:"The weather affects my mood."},
+    {w:"recent", pos:"adj", m:"happening not long ago", ex:"In recent years, things have changed."},
+    {w:"common", pos:"adj", m:"happening often / usual", ex:"It's a common mistake."},
+    {w:"similar", pos:"adj", m:"almost the same", ex:"Our ideas are similar."},
+    {w:"various", pos:"adj", m:"many different", ex:"The shop sells various products."},
+    {w:"particular", pos:"adj", m:"specific / special", ex:"Is there a particular book you want?"},
+    {w:"certain", pos:"adj", m:"sure / definite", ex:"I'm certain he will come."},
+    {w:"obvious", pos:"adj", m:"easy to see / clear", ex:"The answer is obvious."},
+    {w:"useful", pos:"adj", m:"helpful", ex:"This tool is very useful."},
+    {w:"difficult", pos:"adj", m:"hard to do", ex:"English grammar can be difficult."},
+    {w:"depend on", pos:"phrase", m:"to be decided by", ex:"It depends on the weather."},
+    {w:"take part in", pos:"phrase", m:"to join an activity", ex:"I want to take part in the contest."},
+    {w:"look forward to", pos:"phrase", m:"to feel excited about", ex:"I look forward to seeing you."},
+    {w:"get used to", pos:"phrase", m:"to become familiar with", ex:"I got used to the new job."},
+  ],
+  b1b2: [
+    {w:"nevertheless", pos:"adv", m:"in spite of that", ex:"It was hard; nevertheless, she succeeded."},
+    {w:"significant", pos:"adj", m:"large or important", ex:"There was a significant improvement in sales."},
+    {w:"consider", pos:"verb", m:"to think about carefully", ex:"We should consider all the options."},
+    {w:"approach", pos:"noun/verb", m:"a way of doing / to come near", ex:"We need a new approach to the problem."},
+    {w:"despite", pos:"prep", m:"in spite of", ex:"Despite the cost, it was worth it."},
+    {w:"achieve", pos:"verb", m:"to succeed in reaching a goal", ex:"You can achieve anything with effort."},
+    {w:"essential", pos:"adj", m:"absolutely necessary", ex:"Water is essential for life."},
+    {w:"furthermore", pos:"adv", m:"in addition / moreover", ex:"It's cheap; furthermore, it's reliable."},
+    {w:"tend to", pos:"phrase", m:"usually do something", ex:"I tend to wake up early."},
+    {w:"reluctant", pos:"adj", m:"unwilling / hesitant", ex:"He was reluctant to agree."},
+    {w:"emphasize", pos:"verb", m:"to give special importance", ex:"She emphasized the need for practice."},
+    {w:"consequence", pos:"noun", m:"a result of an action", ex:"Every action has consequences."},
+    {w:"acquire", pos:"verb", m:"to get or gain", ex:"He acquired new skills quickly."},
+    {w:"regardless", pos:"adv", m:"despite everything", ex:"I'll go regardless of the weather."},
+    {w:"sufficient", pos:"adj", m:"enough", ex:"We have sufficient time to finish."},
+    {w:"demonstrate", pos:"verb", m:"to show clearly", ex:"The results demonstrate real progress."},
+    {w:"establish", pos:"verb", m:"to set up / create", ex:"They established the company in 2010."},
+    {w:"maintain", pos:"verb", m:"to keep at the same level", ex:"It's hard to maintain motivation."},
+    {w:"contribute", pos:"verb", m:"to give a part / help", ex:"Everyone contributed to the project."},
+    {w:"determine", pos:"verb", m:"to decide or find out", ex:"We must determine the cause."},
+    {w:"indicate", pos:"verb", m:"to show or point to", ex:"The data indicates a clear trend."},
+    {w:"assume", pos:"verb", m:"to think true without proof", ex:"Don't assume he agrees."},
+    {w:"obtain", pos:"verb", m:"to get / acquire", ex:"You can obtain a visa online."},
+    {w:"enhance", pos:"verb", m:"to improve the quality", ex:"Reading enhances your vocabulary."},
+    {w:"reveal", pos:"verb", m:"to make known", ex:"The study revealed surprising facts."},
+    {w:"acknowledge", pos:"verb", m:"to admit / accept as true", ex:"He acknowledged his mistake."},
+    {w:"undertake", pos:"verb", m:"to take on a task", ex:"She undertook a difficult project."},
+    {w:"comprise", pos:"verb", m:"to be made up of", ex:"The team comprises five people."},
+    {w:"diverse", pos:"adj", m:"varied / different kinds", ex:"We have a diverse group of students."},
+    {w:"substantial", pos:"adj", m:"large in amount", ex:"They made a substantial profit."},
+    {w:"crucial", pos:"adj", m:"extremely important", ex:"This step is crucial to success."},
+    {w:"adequate", pos:"adj", m:"enough / acceptable", ex:"The salary is adequate."},
+    {w:"feasible", pos:"adj", m:"possible to do", ex:"Is this plan feasible?"},
+    {w:"inevitable", pos:"adj", m:"certain to happen", ex:"Change is inevitable."},
+    {w:"prominent", pos:"adj", m:"important / well-known", ex:"He is a prominent scientist."},
+    {w:"comprehensive", pos:"adj", m:"complete / covering everything", ex:"We need a comprehensive plan."},
+    {w:"subsequent", pos:"adj", m:"coming after", ex:"In subsequent years, sales rose."},
+    {w:"distinct", pos:"adj", m:"clearly different", ex:"They have two distinct meanings."},
+    {w:"ambiguous", pos:"adj", m:"having more than one meaning", ex:"His answer was ambiguous."},
+    {w:"thorough", pos:"adj", m:"complete and careful", ex:"She did a thorough check."},
+    {w:"in terms of", pos:"phrase", m:"with regard to", ex:"In terms of cost, it's fine."},
+    {w:"come up with", pos:"phrase", m:"to think of an idea", ex:"She came up with a great plan."},
+    {w:"take into account", pos:"phrase", m:"to consider", ex:"Take into account the budget."},
+    {w:"on the whole", pos:"phrase", m:"generally / mostly", ex:"On the whole, it went well."},
+    {w:"bear in mind", pos:"phrase", m:"to remember / consider", ex:"Bear in mind it's expensive."},
+    {w:"a great deal of", pos:"phrase", m:"a large amount of", ex:"It took a great deal of effort."},
+    {w:"to some extent", pos:"phrase", m:"partly", ex:"I agree, to some extent."},
+    {w:"as far as I'm concerned", pos:"phrase", m:"in my opinion", ex:"As far as I'm concerned, it's fine."},
+    {w:"give rise to", pos:"phrase", m:"to cause", ex:"The decision gave rise to problems."},
+    {w:"play a role in", pos:"phrase", m:"to be a factor in", ex:"Luck plays a role in success."},
+  ],
+  connect: [
+    {w:"on the other hand", pos:"phrase", m:"shows the opposite side", ex:"It's expensive; on the other hand, it lasts long."},
+    {w:"as a result", pos:"phrase", m:"because of this", ex:"He studied hard; as a result, he passed."},
+    {w:"for instance", pos:"phrase", m:"for example", ex:"Many fruits are healthy, for instance apples."},
+    {w:"in addition", pos:"phrase", m:"also / plus", ex:"In addition, the hotel has a pool."},
+    {w:"in conclusion", pos:"phrase", m:"to finish / summarize", ex:"In conclusion, exercise is important."},
+    {w:"first of all", pos:"phrase", m:"to begin", ex:"First of all, let me thank you."},
+    {w:"to sum up", pos:"phrase", m:"to summarize briefly", ex:"To sum up, the plan worked well."},
+    {w:"in other words", pos:"phrase", m:"to explain differently", ex:"It's free; in other words, no cost."},
+    {w:"as long as", pos:"phrase", m:"on the condition that", ex:"You can go as long as you're careful."},
+    {w:"in fact", pos:"phrase", m:"actually / to add truth", ex:"It's good; in fact, it's the best."},
+    {w:"therefore", pos:"phrase", m:"for that reason", ex:"He was late; therefore, he missed the bus."},
+    {w:"moreover", pos:"phrase", m:"in addition / besides", ex:"It's cheap; moreover, it's good quality."},
+    {w:"otherwise", pos:"phrase", m:"if not / or else", ex:"Hurry up, otherwise we'll be late."},
+    {w:"meanwhile", pos:"phrase", m:"at the same time", ex:"I cooked; meanwhile, she cleaned."},
+    {w:"in particular", pos:"phrase", m:"especially", ex:"I love fruit, in particular mangoes."},
+    {w:"due to", pos:"phrase", m:"because of", ex:"The delay was due to the weather."},
+    {w:"as a matter of fact", pos:"phrase", m:"in reality / truly", ex:"As a matter of fact, I agree."},
+    {w:"by the way", pos:"phrase", m:"to change topic", ex:"By the way, did you call him?"},
+    {w:"in spite of", pos:"phrase", m:"despite", ex:"In spite of the rain, we walked."},
+    {w:"so that", pos:"phrase", m:"in order to", ex:"I left early so that I could rest."},
+    {w:"even though", pos:"phrase", m:"despite the fact", ex:"Even though it's hard, I enjoy it."},
+    {w:"as soon as", pos:"phrase", m:"immediately when", ex:"Call me as soon as you arrive."},
+    {w:"whereas", pos:"phrase", m:"in contrast / while", ex:"He likes tea, whereas I like coffee."},
+    {w:"unless", pos:"phrase", m:"if not", ex:"I won't go unless you come."},
+    {w:"in order to", pos:"phrase", m:"for the purpose of", ex:"I study in order to improve."},
+    {w:"that is to say", pos:"phrase", m:"in other words", ex:"It's free, that is to say, no charge."},
+    {w:"on the contrary", pos:"phrase", m:"opposite is true", ex:"It's not boring; on the contrary, it's fun."},
+    {w:"all in all", pos:"phrase", m:"considering everything", ex:"All in all, it was a good day."},
+    {w:"for this reason", pos:"phrase", m:"because of this", ex:"For this reason, I left early."},
+    {w:"needless to say", pos:"phrase", m:"obviously", ex:"Needless to say, he was happy."},
+  ]
+};
+
+const DIALOGUES = [
+  { id:"job", title:"💼 A Job Interview", level:"B1", lines:[
+    {who:"Interviewer", side:"a", t:"Thanks for coming in. Could you tell me a bit about yourself?"},
+    {who:"You", side:"b", t:"Of course. I have three years of experience in customer service, and I really enjoy solving problems."},
+    {who:"Interviewer", side:"a", t:"That's great. Why are you interested in this position?"},
+    {who:"You", side:"b", t:"I'm looking for a new challenge, and your company has an excellent reputation."},
+    {who:"Interviewer", side:"a", t:"What would you say is your biggest strength?"},
+    {who:"You", side:"b", t:"I'd say I'm very organized and I work well under pressure."},
+    {who:"Interviewer", side:"a", t:"Do you have any questions for us?"},
+    {who:"You", side:"b", t:"Yes, could you tell me more about the team I'd be working with?"},
+  ]},
+  { id:"plans", title:"☕ Making Plans with a Friend", level:"B1", lines:[
+    {who:"Sara", side:"a", t:"Hey! Are you free this weekend?"},
+    {who:"You", side:"b", t:"I think so. What did you have in mind?"},
+    {who:"Sara", side:"a", t:"I was thinking we could go to that new café downtown."},
+    {who:"You", side:"b", t:"Sounds good! What time works for you?"},
+    {who:"Sara", side:"a", t:"How about Saturday around noon?"},
+    {who:"You", side:"b", t:"Perfect. I'll meet you there. Should I book a table?"},
+    {who:"Sara", side:"a", t:"Good idea, it gets pretty busy."},
+    {who:"You", side:"b", t:"No problem, I'll take care of it. See you then!"},
+  ]},
+  { id:"opinion", title:"🗣️ Sharing an Opinion", level:"B2", lines:[
+    {who:"Omar", side:"a", t:"What do you think about working from home?"},
+    {who:"You", side:"b", t:"Honestly, I think it has both advantages and disadvantages."},
+    {who:"Omar", side:"a", t:"What do you mean exactly?"},
+    {who:"You", side:"b", t:"On one hand, it saves time. On the other hand, it can feel isolating."},
+    {who:"Omar", side:"a", t:"That's a good point. So would you prefer it?"},
+    {who:"You", side:"b", t:"To some extent, yes — but I'd want a balance between home and office."},
+    {who:"Omar", side:"a", t:"I see where you're coming from."},
+    {who:"You", side:"b", t:"At the end of the day, it really depends on the person."},
+  ]},
+  { id:"problem", title:"🛠️ Solving a Problem at Work", level:"B2", lines:[
+    {who:"Manager", side:"a", t:"It seems we're behind schedule on the project."},
+    {who:"You", side:"b", t:"You're right. I think the main issue is that we underestimated the workload."},
+    {who:"Manager", side:"a", t:"So what do you suggest we do?"},
+    {who:"You", side:"b", t:"I'd recommend we focus on the most urgent tasks first."},
+    {who:"Manager", side:"a", t:"That makes sense. Can we still meet the deadline?"},
+    {who:"You", side:"b", t:"If we get more support, I'm confident we can manage it."},
+    {who:"Manager", side:"a", t:"Alright, I'll arrange some extra help."},
+    {who:"You", side:"b", t:"Thank you. I'll make sure we stay on track from now on."},
+  ]},
+  { id:"travel", title:"✈️ At the Airport", level:"B1", lines:[
+    {who:"Agent", side:"a", t:"Good morning. May I see your passport, please?"},
+    {who:"You", side:"b", t:"Sure, here you are."},
+    {who:"Agent", side:"a", t:"Are you checking in any bags today?"},
+    {who:"You", side:"b", t:"Just one suitcase, and this bag I'll carry on."},
+    {who:"Agent", side:"a", t:"Would you prefer a window or an aisle seat?"},
+    {who:"You", side:"b", t:"A window seat would be great, thanks."},
+    {who:"Agent", side:"a", t:"Your gate is B12 and boarding starts at 10:30."},
+    {who:"You", side:"b", t:"Perfect. Could you tell me where the gate is?"},
+  ]},
+];
+
+const GRAMMAR = [
+  {t:"Present Perfect (have done)", d:"For experiences and past actions with present result. Master this early — it's the biggest A2→B1 jump.", e:"I have lived here for three years."},
+  {t:"Past Continuous (was doing)", d:"For actions in progress in the past, often interrupted.", e:"I was cooking when he called."},
+  {t:"Future forms (will / going to)", d:"'will' for decisions now, 'going to' for plans.", e:"I'm going to visit Cairo next week."},
+  {t:"Comparatives & Superlatives", d:"Comparing things: bigger, the biggest, more useful.", e:"This is the most useful app I have."},
+  {t:"Conditionals (if...)", d:"Zero, first and second conditional. Key for B1.", e:"If I had time, I would travel more."},
+  {t:"Modal verbs", d:"should, must, might, could — for advice, obligation, possibility.", e:"You should practice every day."},
+  {t:"Passive voice", d:"When the action matters more than who does it. A B1/B2 essential.", e:"English is spoken all over the world."},
+  {t:"Reported speech", d:"Telling what someone said. Important for B2.", e:"She said she was tired."},
+  {t:"Relative clauses (who/which/that)", d:"Joining sentences with extra information.", e:"The man who called is my boss."},
+  {t:"Present Perfect Continuous", d:"For ongoing actions up to now — a B2 marker.", e:"I have been studying for two hours."},
+];
+
+/* ---------- TTS (offline, US English, male preferred) ---------- */
+let rate=0.8, speakingTxt=null, activeBtn=null;
+let usMaleVoice=null;
+
+function pickUSMaleVoice(){
+  const all=window.speechSynthesis.getVoices();
+  // 1) only US English voices
+  let us=all.filter(v=>(v.lang||'').toLowerCase()==='en-us');
+  if(!us.length) us=all.filter(v=>(v.lang||'').toLowerCase().startsWith('en')); // fallback any English
+  // 2) prefer ones whose name signals "male"
+  const maleNames=['male','David','Mark','Mike','Matthew','Guy','Eric','Aaron','Fred','Alex','Tom','James','Daniel','Google US English'];
+  let male=us.find(v=>maleNames.some(n=>v.name.toLowerCase().includes(n.toLowerCase())));
+  // 'Google US English' is the default Android US voice (works well)
+  usMaleVoice = male || us[0] || all[0] || null;
+}
+
+function clearBtn(){ if(activeBtn){activeBtn.classList.remove('sp');} activeBtn=null; speakingTxt=null; }
+
+function speak(text, btn){
+  if(!('speechSynthesis' in window)){ document.getElementById('ttsUnsupported').style.display='block'; return; }
+  if(speakingTxt===text){ window.speechSynthesis.cancel(); clearBtn(); return; }
+  window.speechSynthesis.cancel(); clearBtn();
+  speakingTxt=text; activeBtn=btn; if(btn) btn.classList.add('sp');
+  if(!usMaleVoice) pickUSMaleVoice();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='en-US'; u.rate=rate; u.pitch=0.9;          // slightly lower pitch = more male sound
+  if(usMaleVoice) u.voice=usMaleVoice;
+  u.onend=()=>clearBtn();
+  u.onerror=e=>{ if(e.error!=='interrupted') clearBtn(); };
+  window.speechSynthesis.speak(u);
+}
+if('speechSynthesis' in window){
+  window.speechSynthesis.getVoices(); pickUSMaleVoice();
+  window.speechSynthesis.onvoiceschanged=()=>{ window.speechSynthesis.getVoices(); pickUSMaleVoice(); };
+}
+
+/* ---------- PRONUNCIATION CHECK via phone keyboard mic ---------- */
+// No web mic needed. User taps the input, presses the keyboard's 🎤 (Gboard),
+// speaks, and we compare the typed/spoken text to the target. Works on a file.
+
+function norm(s){ return (s||'').toLowerCase().replace(/[^a-z' ]/g,'').replace(/\s+/g,' ').trim(); }
+
+function checkSpoken(target, inputEl, resultEl){
+  const said = inputEl.value;
+  if(!said.trim()){
+    resultEl.className='mic-result show';
+    resultEl.innerHTML='<span class="heard">👆 Tap the box, press the 🎤 on your keyboard, and say: <b>'+target+'</b></span>';
+    return;
+  }
+  const t=norm(target), s=norm(said);
+  const match = s===t || s.includes(t) || t.includes(s);
+  if(match){
+    resultEl.className='mic-result show';
+    resultEl.innerHTML='<span class="ok">✅ Correct! Well done.</span><br><span class="heard">You said: <b>'+said+'</b></span>';
+  } else {
+    resultEl.className='mic-result show';
+    resultEl.innerHTML='<span class="bad">❌ Not matching yet — try again.</span><br>'+
+      '<span class="heard">You said: <b>'+said+'</b><br>Target: <b>'+target+'</b></span><br>'+
+      '<span class="heard">💡 Tap 🔊 to hear it, then repeat.</span>';
+  }
+}
+
+/* ---------- TABS ---------- */
+document.getElementById('tabs').addEventListener('click',e=>{
+  const b=e.target.closest('.tab'); if(!b) return;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
+  b.classList.add('on');
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
+  document.getElementById('p-'+b.dataset.p).classList.add('on');
+});
+
+/* ---------- VOCAB ---------- */
+let curLevel='a2b1';
+function renderVocab(){
+  const list=document.getElementById('vocabList');
+  list.innerHTML=VOCAB[curLevel].map((v,i)=>`
+    <div class="vrow">
+      <div class="vtop">
+        <span class="vword">${v.w}</span>
+        <span class="vpos">${v.pos}</span>
+        <button class="vspeak" data-sp="${i}-w">🔊</button>
+        <button class="vmic" data-mic="${i}">🎤</button>
+      </div>
+      <div class="vmean">${v.m}</div>
+      <div class="vex">
+        <div class="vex-txt">"${v.ex}"</div>
+        <button class="vex-speak" data-sp="${i}-e">🔊</button>
+      </div>
+      <div class="mic-input-wrap" id="miw-${i}" style="display:none">
+        <input class="mic-input" id="min-${i}" placeholder="Tap 🎤 on your keyboard, then say the word…" autocapitalize="none" autocomplete="off">
+        <button class="mic-check" data-check="${i}">Check</button>
+      </div>
+      <div class="mic-result" id="mres-${i}"></div>
+    </div>`).join('');
+}
+document.getElementById('levelpick').addEventListener('click',e=>{
+  const b=e.target.closest('.lp'); if(!b) return;
+  document.querySelectorAll('.lp').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on'); curLevel=b.dataset.l; renderVocab();
+});
+document.getElementById('vocabList').addEventListener('click',e=>{
+  const mic=e.target.closest('[data-mic]');
+  if(mic){
+    const i=+mic.dataset.mic;
+    const wrap=document.getElementById('miw-'+i);
+    wrap.style.display = wrap.style.display==='none' ? 'flex' : 'none';
+    const inp=document.getElementById('min-'+i);
+    if(wrap.style.display==='flex'){ inp.value=''; inp.focus(); }
+    return;
+  }
+  const chk=e.target.closest('[data-check]');
+  if(chk){ const i=+chk.dataset.check;
+    checkSpoken(VOCAB[curLevel][i].w, document.getElementById('min-'+i), document.getElementById('mres-'+i)); return; }
+  const b=e.target.closest('[data-sp]'); if(!b) return;
+  const [i,kind]=b.dataset.sp.split('-');
+  const v=VOCAB[curLevel][+i];
+  speak(kind==='w'?v.w:v.ex, b);
+});
+// pressing Enter in a mic input also checks
+document.getElementById('vocabList').addEventListener('keydown',e=>{
+  if(e.key==='Enter' && e.target.classList.contains('mic-input')){
+    const i=e.target.id.split('-')[1];
+    checkSpoken(VOCAB[curLevel][+i].w, e.target, document.getElementById('mres-'+i));
+  }
+});
+
+/* ---------- GRAMMAR ---------- */
+document.getElementById('gramList').innerHTML=GRAMMAR.map((g,i)=>`
+  <div class="grambox">
+    <h4>${i+1}. ${g.t}</h4>
+    <p>${g.d}</p>
+    <div class="eg">e.g. ${g.e}</div>
+  </div>`).join('');
+
+/* ---------- WEEK TRACKER ---------- */
+const days=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+let done=JSON.parse(localStorage.getItem('plan_week')||'[]');
+function renderWeek(){
+  const wr=document.getElementById('weekrow');
+  wr.innerHTML=days.map((d,i)=>`<div class="day ${done.includes(i)?'done':''}" data-d="${i}">${d[0]}</div>`).join('');
+}
+document.getElementById('weekrow').addEventListener('click',e=>{
+  const b=e.target.closest('.day'); if(!b) return;
+  const i=+b.dataset.d;
+  done.includes(i)? done=done.filter(x=>x!==i) : done.push(i);
+  localStorage.setItem('plan_week',JSON.stringify(done));
+  renderWeek();
+});
+
+/* ---------- DIALOGUES ---------- */
+let curDia=DIALOGUES[0].id;
+function renderDiaPick(){
+  document.getElementById('diapick').innerHTML=DIALOGUES.map(d=>
+    `<button class="lp ${d.id===curDia?'on':''}" data-d="${d.id}" style="flex:0 0 auto;padding:9px 14px">${d.title}</button>`
+  ).join('');
+}
+function renderDia(){
+  const d=DIALOGUES.find(x=>x.id===curDia);
+  const html=`
+    <div class="dia-title">${d.title} <span class="vpos" style="vertical-align:middle">${d.level}</span></div>
+    <button class="dia-play" id="diaPlayBtn">🎬 Play whole conversation</button>
+    ${d.lines.map((l,i)=>`
+      <div class="line ${l.side}">
+        <button class="line-speak" data-dl="${i}">🔊</button>
+        <button class="line-mic" data-dmic="${i}">🎤</button>
+        <div class="bubble"><div class="who">${l.who}</div>${l.t}
+          <div class="mic-input-wrap" id="dmiw-${i}" style="display:none">
+            <input class="mic-input" id="dmin-${i}" placeholder="Tap 🎤 on keyboard, then say the line…" autocapitalize="none" autocomplete="off">
+            <button class="mic-check" data-dcheck="${i}">Check</button>
+          </div>
+          <div class="mic-result" id="dres-${i}"></div>
+        </div>
+      </div>`).join('')}`;
+  document.getElementById('diaList').innerHTML=html;
+}
+document.getElementById('diapick').addEventListener('click',e=>{
+  const b=e.target.closest('.lp'); if(!b) return;
+  curDia=b.dataset.d; renderDiaPick(); renderDia();
+});
+document.getElementById('diaList').addEventListener('click',e=>{
+  const playB=e.target.closest('#diaPlayBtn');
+  if(playB){ playWholeDialogue(playB); return; }
+  const mic=e.target.closest('[data-dmic]');
+  if(mic){ const i=+mic.dataset.dmic;
+    const wrap=document.getElementById('dmiw-'+i);
+    wrap.style.display = wrap.style.display==='none' ? 'flex' : 'none';
+    const inp=document.getElementById('dmin-'+i);
+    if(wrap.style.display==='flex'){ inp.value=''; inp.focus(); }
+    return; }
+  const chk=e.target.closest('[data-dcheck]');
+  if(chk){ const d=DIALOGUES.find(x=>x.id===curDia); const i=+chk.dataset.dcheck;
+    checkSpoken(d.lines[i].t, document.getElementById('dmin-'+i), document.getElementById('dres-'+i)); return; }
+  const b=e.target.closest('[data-dl]'); if(!b) return;
+  const d=DIALOGUES.find(x=>x.id===curDia);
+  speak(d.lines[+b.dataset.dl].t, b);
+});
+document.getElementById('diaList').addEventListener('keydown',e=>{
+  if(e.key==='Enter' && e.target.classList.contains('mic-input')){
+    const d=DIALOGUES.find(x=>x.id===curDia); const i=e.target.id.split('-')[1];
+    checkSpoken(d.lines[+i].t, e.target, document.getElementById('dres-'+i));
+  }
+});
+
+// play all lines in sequence
+let diaQueue=null;
+function playWholeDialogue(btn){
+  if(diaQueue){ window.speechSynthesis.cancel(); diaQueue=null; clearBtn(); btn.classList.remove('sp'); btn.textContent='🎬 Play whole conversation'; return; }
+  if(!('speechSynthesis' in window)) return;
+  const d=DIALOGUES.find(x=>x.id===curDia);
+  btn.classList.add('sp'); btn.textContent='⏹ Stop';
+  let idx=0;
+  diaQueue=true;
+  const next=()=>{
+    if(!diaQueue || idx>=d.lines.length){ diaQueue=null; btn.classList.remove('sp'); btn.textContent='🎬 Play whole conversation'; return; }
+    const u=new SpeechSynthesisUtterance(d.lines[idx].t);
+    u.lang='en-US'; u.rate=rate; u.pitch=0.9;
+    if(!usMaleVoice) pickUSMaleVoice();
+    if(usMaleVoice) u.voice=usMaleVoice;
+    u.onend=()=>{ idx++; setTimeout(next,350); };
+    u.onerror=()=>{ idx++; setTimeout(next,350); };
+    window.speechSynthesis.speak(u);
+  };
+  next();
+}
+
+renderVocab(); renderWeek(); renderDiaPick(); renderDia();
+</script>
+</body>
+</html>
