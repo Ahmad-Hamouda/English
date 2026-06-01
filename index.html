@@ -250,6 +250,19 @@
   .today-mini-spk{width:34px;height:30px;border-radius:8px;border:1px solid rgba(240,165,0,.4);background:var(--surf);color:var(--gold);font-size:13px;cursor:pointer}
   .today-mini-mean{color:var(--mut);font-size:12px;margin-top:4px}
   .today-complete{text-align:center;padding:24px;background:linear-gradient(135deg,rgba(79,195,161,.12),rgba(240,165,0,.08));border:1px solid rgba(79,195,161,.3);border-radius:16px;margin-top:8px}
+  .step-dots{display:flex;gap:6px;justify-content:center;margin-bottom:14px}
+  .step-dot{width:9px;height:9px;border-radius:50%;background:#2c3142;transition:all .2s}
+  .step-dot.cur{background:var(--gold);transform:scale(1.3)}
+  .step-dot.d{background:var(--grn)}
+  .task.wizard{margin-bottom:14px}
+  .task-done-btn{width:100%;margin-top:14px;padding:12px 0;border-radius:11px;border:1px solid rgba(79,195,161,.4);background:rgba(79,195,161,.08);color:var(--grn);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .task-done-btn.on{background:var(--grn);color:#0d0f14;border-color:var(--grn)}
+  .wiz-nav{display:flex;gap:10px;margin-bottom:8px}
+  .wiz-btn{flex:1;padding:13px 0;border-radius:12px;border:1px solid var(--bd);background:var(--surf);color:var(--tx);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .wiz-btn.next{background:var(--gold);border-color:var(--gold);color:#0d0f14}
+  .wiz-btn.finish{background:var(--grn);border-color:var(--grn);color:#0d0f14}
+  .wiz-btn.finish.dim{opacity:.5}
+  .wiz-btn.prev:disabled{opacity:.4;cursor:not-allowed}
   .today-complete .big{font-size:40px;margin-bottom:8px}
   .today-complete h3{font-family:'Fraunces',serif;font-size:20px;margin-bottom:6px}
   .today-complete p{color:var(--mut);font-size:13px;line-height:1.6}
@@ -1389,6 +1402,7 @@ function isLessonUnlocked(n){
 }
 
 let selectedLesson=1; // set properly at init (after TODAY_TASKS is defined)
+let taskStep=0;       // which task in the day wizard we're viewing
 let todayState={};
 function saveToday(){ localStorage.setItem(lessonKey(selectedLesson), JSON.stringify(todayState)); }
 
@@ -1489,69 +1503,89 @@ function renderToday(){
   function sp(txt){ return '<button class="t-spk" onclick="speak('+JSON.stringify(txt).replace(/"/g,'&quot;')+', this)">🔊</button>'; }
   function mic(txt,id){ return '<button class="t-mic" data-tmic="'+id+'" data-tmtext="'+txt.replace(/"/g,'&quot;')+'">🎤</button>'; }
 
-  html+=TODAY_TASKS.map(t=>{
-    const done=!!todayState[t.id];
-    let extra=t.sub;
-    if(t.id==='review') extra=t.sub+' · <b style="color:var(--gold)">'+dueN+' due now</b>';
+  // ---- STEP WIZARD: show ONE task at a time ----
+  if(taskStep<0) taskStep=0;
+  if(taskStep>TODAY_TASKS.length-1) taskStep=TODAY_TASKS.length-1;
+  const t=TODAY_TASKS[taskStep];
+  const done=!!todayState[t.id];
+  let extra=t.sub;
+  if(t.id==='review') extra=t.sub+' · <b style="color:var(--gold)">'+dueN+' due now</b>';
 
-    let content='';
-    if(t.id==='wotd'){
-      content='<div class="task-content"><div class="today-mini-word">'+wod.w+' '+sp(wod.w)+'</div>'+
-        '<div class="today-mini-mean">'+wod.m+' — "'+wod.ex+'"</div></div>';
-    }
-    else if(t.id==='newvocab'){
-      // show this day's 10 words inline, each with speak + mic + add-to-review
-      content='<div class="task-content"><div class="t-wordlist">'+
-        plan.words.map((w,wi)=>{
-          const added=!!srs[w.w];
-          return '<div class="t-word">'+
-            '<span class="t-w-text"><b>'+w.w+'</b> <span class="t-w-pos">'+w.pos+'</span><br><span class="t-w-mean">'+w.m+'</span></span>'+
-            '<span class="t-w-btns">'+sp(w.w)+mic(w.w,'tw'+wi)+'<button class="t-add '+(added?'on':'')+'" data-tadd="'+encodeURIComponent(w.w)+'">'+(added?'✓':'+')+'</button></span>'+
-            '<div class="mic-result" id="tres-tw'+wi+'"></div>'+
-            '</div>';
-        }).join('')+'</div></div>';
-    }
-    else if(t.id==='dialogue'){
-      const d=plan.dialogue;
-      content='<div class="task-content"><div class="t-dia-title">'+d.title+' <span class="t-w-pos">'+d.level+'</span></div>'+
-        '<button class="t-dia-play" data-tdiaplay="1">🎬 Play whole conversation</button>'+
-        d.lines.map((l,li)=>'<div class="t-line '+l.side+'">'+
-          '<span class="t-line-who">'+l.who+':</span> '+l.t+' '+sp(l.t)+mic(l.t,'tl'+li)+
-          '<div class="mic-result" id="tres-tl'+li+'"></div></div>').join('')+
-        '</div>';
-    }
-    else if(t.id==='speak'){
-      // grammar sentence of the day to practice with mic
-      const g=plan.grammar;
-      content='<div class="task-content"><div class="t-w-mean" style="margin-bottom:6px">Grammar focus: <b style="color:var(--gold)">'+g.t+'</b></div>'+
-        '<div class="t-gram-eg">"'+g.e+'" '+sp(g.e)+mic(g.e,'tg0')+'</div>'+
-        '<div class="mic-result" id="tres-tg0"></div></div>';
-    }
-    else if(t.id==='review'){
-      content='<div class="task-content"><button class="task-go" data-goto="review">Open Review →</button></div>';
-    }
-    else if(t.id==='quiz'){
-      content='<div class="task-content"><div class="t-w-mean" style="margin-bottom:8px">'+
-        'Mix of <b style="color:var(--gold)">today\'s words</b> + <b style="color:var(--pur)">review of earlier days</b>.</div>'+
-        '<div id="dayQuizBox"></div></div>';
-    }
+  // step dots
+  html+='<div class="step-dots">'+TODAY_TASKS.map((tt,i)=>{
+    let c='step-dot'; if(todayState[tt.id]) c+=' d'; if(i===taskStep) c+=' cur';
+    return '<span class="'+c+'"></span>';
+  }).join('')+'</div>';
 
-    return '<div class="task '+(done?'done':'')+'" data-task="'+t.id+'">'+
-      '<div class="task-top">'+
-        '<div class="task-check">✓</div>'+
-        '<div class="task-info"><div class="task-title">'+t.icon+' '+t.title+'</div>'+
-          '<div class="task-sub">'+extra+'</div></div>'+
-        '<span class="task-time">'+t.time+'</span>'+
-      '</div>'+content+'</div>';
-  }).join('');
+  let content='';
+  if(t.id==='wotd'){
+    content='<div class="task-content"><div class="today-mini-word">'+wod.w+' '+sp(wod.w)+'</div>'+
+      '<div class="today-mini-mean">'+wod.m+' — "'+wod.ex+'"</div></div>';
+  }
+  else if(t.id==='newvocab'){
+    content='<div class="task-content"><div class="t-wordlist">'+
+      plan.words.map((w,wi)=>{
+        const added=!!srs[w.w];
+        return '<div class="t-word">'+
+          '<span class="t-w-text"><b>'+w.w+'</b> <span class="t-w-pos">'+w.pos+'</span><br><span class="t-w-mean">'+w.m+'</span></span>'+
+          '<span class="t-w-btns">'+sp(w.w)+mic(w.w,'tw'+wi)+'<button class="t-add '+(added?'on':'')+'" data-tadd="'+encodeURIComponent(w.w)+'">'+(added?'✓':'+')+'</button></span>'+
+          '<div class="mic-result" id="tres-tw'+wi+'"></div>'+
+          '</div>';
+      }).join('')+'</div></div>';
+  }
+  else if(t.id==='dialogue'){
+    const d=plan.dialogue;
+    content='<div class="task-content"><div class="t-dia-title">'+d.title+' <span class="t-w-pos">'+d.level+'</span></div>'+
+      '<button class="t-dia-play" data-tdiaplay="1">🎬 Play whole conversation</button>'+
+      d.lines.map((l,li)=>'<div class="t-line '+l.side+'">'+
+        '<span class="t-line-who">'+l.who+':</span> '+l.t+' '+sp(l.t)+mic(l.t,'tl'+li)+
+        '<div class="mic-result" id="tres-tl'+li+'"></div></div>').join('')+
+      '</div>';
+  }
+  else if(t.id==='speak'){
+    const g=plan.grammar;
+    content='<div class="task-content"><div class="t-w-mean" style="margin-bottom:6px">Grammar focus: <b style="color:var(--gold)">'+g.t+'</b></div>'+
+      '<div class="t-gram-eg">"'+g.e+'" '+sp(g.e)+mic(g.e,'tg0')+'</div>'+
+      '<div class="mic-result" id="tres-tg0"></div></div>';
+  }
+  else if(t.id==='review'){
+    content='<div class="task-content"><button class="task-go" data-goto="review">Open Review →</button></div>';
+  }
+  else if(t.id==='quiz'){
+    content='<div class="task-content"><div class="t-w-mean" style="margin-bottom:8px">'+
+      'Mix of <b style="color:var(--gold)">today\'s words</b> + <b style="color:var(--pur)">review of earlier days</b>.</div>'+
+      '<div id="dayQuizBox"></div></div>';
+  }
 
-  if(pct===100){
+  html+='<div class="task '+(done?'done':'')+' wizard" data-task="'+t.id+'">'+
+    '<div class="task-top">'+
+      '<div class="task-check">✓</div>'+
+      '<div class="task-info"><div class="task-title">'+t.icon+' '+t.title+'</div>'+
+        '<div class="task-sub">'+extra+'</div></div>'+
+      '<span class="task-time">'+t.time+'</span>'+
+    '</div>'+content+
+    '<button class="task-done-btn '+(done?'on':'')+'" data-toggle="'+t.id+'">'+(done?'✓ Done — tap to undo':'Mark this task done')+'</button>'+
+    '</div>';
+
+  // nav buttons
+  const isFirst=taskStep===0, isLast=taskStep===TODAY_TASKS.length-1;
+  const allDone=TODAY_TASKS.every(x=>todayState[x.id]);
+  html+='<div class="wiz-nav">';
+  html+='<button class="wiz-btn prev" data-step="prev" '+(isFirst?'disabled':'')+'>← Previous</button>';
+  if(isLast){
+    html+='<button class="wiz-btn finish '+(allDone?'':'dim')+'" data-step="finish">🏁 Finish day</button>';
+  } else {
+    html+='<button class="wiz-btn next" data-step="next">Next →</button>';
+  }
+  html+='</div>';
+
+  if(allDone){
     html+='<div class="today-complete"><div class="big">🏆</div>'+
       '<h3>Day complete!</h3><p>You did your full hour. This daily consistency is exactly what takes you from A2 to B2. See you tomorrow!</p></div>';
   }
 
   box.innerHTML=html;
-  renderDayQuiz();   // fill the inline quiz for this day
+  renderDayQuiz();
 }
 
 /* ---------- DAY QUIZ (today's words + review of earlier days) ---------- */
@@ -1657,7 +1691,7 @@ document.getElementById('todayBox').addEventListener('click',e=>{
   }
 
   const day=e.target.closest('[data-lesson]');
-  if(day){ selectedLesson=+day.dataset.lesson; dayQuiz=null; dayQuizRound={n:0,right:0}; renderToday(); return; }
+  if(day){ selectedLesson=+day.dataset.lesson; taskStep=0; dayQuiz=null; dayQuizRound={n:0,right:0}; renderToday(); return; }
   const lockedDay=e.target.closest('[data-locked]');
   if(lockedDay){
     const box=document.getElementById('lockMsg');
@@ -1685,15 +1719,37 @@ document.getElementById('todayBox').addEventListener('click',e=>{
   const tdia=e.target.closest('[data-tdiaplay]');
   if(tdia){ const plan=getLessonPlan(selectedLesson); playWholeDialogue(tdia, plan.dialogue); return; }
 
+  // wizard navigation
+  const stepBtn=e.target.closest('[data-step]');
+  if(stepBtn){
+    const s=stepBtn.dataset.step;
+    if(s==='next'){ taskStep++; dayQuiz=null; dayQuizRound={n:0,right:0}; renderToday(); }
+    else if(s==='prev'){ taskStep--; dayQuiz=null; dayQuizRound={n:0,right:0}; renderToday(); }
+    else if(s==='finish'){
+      const allDone=TODAY_TASKS.every(x=>todayState[x.id]);
+      if(allDone){
+        // advance to next day's lesson
+        selectedLesson=firstIncompleteLesson(); taskStep=0;
+        dayQuiz=null; dayQuizRound={n:0,right:0};
+        renderToday();
+      } else {
+        const box=document.getElementById('lockMsg');
+        if(box){ box.innerHTML='✅ Finish all tasks first (mark each one done).'; box.classList.add('show'); setTimeout(()=>box.classList.remove('show'),2600); }
+      }
+    }
+    return;
+  }
+  // mark-done toggle button
+  const toggle=e.target.closest('[data-toggle]');
+  if(toggle){
+    const id=toggle.dataset.toggle;
+    todayState[id]=!todayState[id];
+    saveToday(); updateDueBadge(); renderToday();
+    return;
+  }
+
   const goto=e.target.closest('[data-goto]');
   if(goto){ document.querySelector('[data-p="'+goto.dataset.goto+'"]').click(); return; }
-  const task=e.target.closest('[data-task]');
-  if(task && e.target.closest('.task-top')){
-    const id=task.dataset.task;
-    todayState[id]=!todayState[id];
-    saveToday();
-    renderToday();
-  }
 });
 
 renderWOTD(); startNewRound(); renderVoiceControls();
