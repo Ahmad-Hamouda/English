@@ -170,6 +170,49 @@
   .method-hero{text-align:center;margin-bottom:18px}
   .method-hero h2{font-family:'Fraunces',serif;font-size:24px;margin-bottom:6px}
   .method-hero p{color:var(--mut);font-size:13px}
+
+  /* TODAY tab */
+  .day-picker{display:flex;gap:5px;justify-content:space-between;margin-bottom:18px}
+  .day-pick{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 7px;border-radius:12px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);cursor:pointer;position:relative;font-family:'DM Sans',sans-serif;transition:all .15s}
+  .day-pick .dp-dow{font-size:10px;font-weight:600;letter-spacing:.5px}
+  .day-pick .dp-num{font-size:17px;font-weight:700;color:var(--tx)}
+  .day-pick .dp-today{position:absolute;bottom:3px;color:var(--gold);font-size:14px;line-height:0}
+  .day-pick.sel{background:var(--gold);border-color:var(--gold)}
+  .day-pick.sel .dp-dow,.day-pick.sel .dp-num{color:#0d0f14}
+  .day-pick.sel .dp-today{color:#0d0f14}
+  .day-pick.complete::after{content:'✓';position:absolute;top:3px;right:5px;font-size:9px;color:var(--grn);font-weight:700}
+  .day-pick.sel.complete::after{color:#0d0f14}
+  .today-head{text-align:center;margin-bottom:18px}
+  .today-date{font-size:11px;color:var(--gold);font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
+  .today-greet{font-family:'Fraunces',serif;font-size:24px;font-weight:700}
+  .today-prog-wrap{background:var(--surf);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:8px;display:flex;align-items:center;gap:16px}
+  .ring{position:relative;width:62px;height:62px;flex:0 0 auto}
+  .ring svg{transform:rotate(-90deg)}
+  .ring-txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--gold)}
+  .today-prog-info{flex:1}
+  .today-prog-info .t1{font-weight:700;font-size:15px;margin-bottom:2px}
+  .today-prog-info .t2{color:var(--mut);font-size:12px}
+  .today-streak{background:rgba(240,165,0,.1);border:1px solid rgba(240,165,0,.3);color:var(--gold);font-size:12px;font-weight:700;padding:8px 12px;border-radius:10px;text-align:center;margin-bottom:16px}
+
+  .task{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;margin-bottom:11px;transition:all .2s}
+  .task.done{border-color:rgba(79,195,161,.4);background:rgba(79,195,161,.05)}
+  .task-top{display:flex;align-items:center;gap:12px;cursor:pointer}
+  .task-check{width:26px;height:26px;border-radius:50%;border:2px solid var(--bd);flex:0 0 auto;display:flex;align-items:center;justify-content:center;font-size:13px;color:transparent;transition:all .2s}
+  .task.done .task-check{background:var(--grn);border-color:var(--grn);color:#0d0f14}
+  .task-info{flex:1}
+  .task-title{font-weight:600;font-size:15px;display:flex;align-items:center;gap:7px}
+  .task.done .task-title{text-decoration:line-through;color:var(--mut)}
+  .task-sub{color:var(--mut);font-size:12px;margin-top:2px}
+  .task-time{background:var(--surf);border:1px solid var(--bd);color:var(--mut);font-size:11px;font-weight:700;padding:3px 9px;border-radius:100px;flex:0 0 auto}
+  .task-content{margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)}
+  .task-go{display:inline-block;margin-top:4px;padding:8px 16px;border-radius:9px;border:1px solid var(--pur);background:rgba(123,140,255,.1);color:var(--pur);font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .today-mini-word{font-family:'Fraunces',serif;font-size:18px;font-weight:600;display:flex;align-items:center;gap:8px}
+  .today-mini-spk{width:34px;height:30px;border-radius:8px;border:1px solid rgba(240,165,0,.4);background:var(--surf);color:var(--gold);font-size:13px;cursor:pointer}
+  .today-mini-mean{color:var(--mut);font-size:12px;margin-top:4px}
+  .today-complete{text-align:center;padding:24px;background:linear-gradient(135deg,rgba(79,195,161,.12),rgba(240,165,0,.08));border:1px solid rgba(79,195,161,.3);border-radius:16px;margin-top:8px}
+  .today-complete .big{font-size:40px;margin-bottom:8px}
+  .today-complete h3{font-family:'Fraunces',serif;font-size:20px;margin-bottom:6px}
+  .today-complete p{color:var(--mut);font-size:13px;line-height:1.6}
   .speak-unsupported{display:none;color:var(--red);font-size:12px;text-align:center;margin-bottom:10px}
 
   /* dialogues */
@@ -210,7 +253,8 @@
   </header>
 
   <div class="tabs" id="tabs">
-    <button class="tab on" data-p="plan">📅 Daily Plan</button>
+    <button class="tab on" data-p="today">🌅 Today</button>
+    <button class="tab" data-p="plan">📅 Daily Plan</button>
     <button class="tab" data-p="review">🔁 Review <span class="due-count" id="dueCount"></span></button>
     <button class="tab" data-p="week">✅ Week Tracker</button>
     <button class="tab" data-p="vocab">📚 Common Words</button>
@@ -220,8 +264,13 @@
     <button class="tab" data-p="method">🎓 How to Learn</button>
   </div>
 
+  <!-- TODAY -->
+  <div class="panel on" id="p-today">
+    <div id="todayBox"></div>
+  </div>
+
   <!-- DAILY PLAN -->
-  <div class="panel on" id="p-plan">
+  <div class="panel" id="p-plan">
     <div class="wotd" id="wotd"></div>
     <div class="block" style="--bc:var(--gold)">
       <div class="block-h"><span class="block-icon">📚</span><span class="block-title">Vocabulary</span><span class="block-time">15 min</span></div>
@@ -694,6 +743,7 @@ document.getElementById('tabs').addEventListener('click',e=>{
   if(b.dataset.p==='quiz') newQuiz();
   if(b.dataset.p==='review') startReview();
   if(b.dataset.p==='method') renderMethod();
+  if(b.dataset.p==='today') renderToday();
 });
 
 /* ---------- VOCAB ---------- */
@@ -1068,9 +1118,156 @@ function matchSearch(v){
   return v.w.toLowerCase().includes(q)||v.m.toLowerCase().includes(q)||v.ex.toLowerCase().includes(q);
 }
 
+/* ---------- TODAY (daily command center) ---------- */
+let selectedDay=todayStr(); // which day we're viewing; defaults to today
+function todayKey(){ return 'today_'+selectedDay; }
+let todayState=JSON.parse(localStorage.getItem(todayKey())||'{}');
+function saveToday(){ localStorage.setItem(todayKey(), JSON.stringify(todayState)); }
+
+// build the 7-day week (this week, Mon–Sun) for the picker
+function getWeekDays(){
+  const now=new Date();
+  const dow=(now.getDay()+6)%7; // 0=Mon
+  const monday=new Date(now); monday.setDate(now.getDate()-dow);
+  const days=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(monday); d.setDate(monday.getDate()+i);
+    days.push(d);
+  }
+  return days;
+}
+
+// streak tracking
+function getStreak(){
+  let streak=0; let d=new Date();
+  // if today not complete yet, start counting from yesterday
+  for(let i=0;i<400;i++){
+    const key='today_'+d.toISOString().slice(0,10);
+    const st=JSON.parse(localStorage.getItem(key)||'{}');
+    const allDone=st.review&&st.wotd&&st.dialogue&&st.quiz&&st.speak;
+    if(allDone){ streak++; d.setDate(d.getDate()-1); }
+    else if(i===0){ d.setDate(d.getDate()-1); } // today incomplete, check from yesterday
+    else break;
+  }
+  return streak;
+}
+
+const TODAY_TASKS=[
+  {id:'review', icon:'🔁', title:'Review due words', time:'5 min', sub:'Strengthen yesterday\'s words', go:'review'},
+  {id:'wotd',   icon:'⭐', title:'Learn the Word of the Day', time:'2 min', sub:'Say it aloud 3 times'},
+  {id:'newvocab', icon:'📚', title:'Add 10 new words to Review', time:'10 min', sub:'Open Common Words, tap + Add to Review', go:'vocab'},
+  {id:'dialogue', icon:'💬', title:'Shadow a dialogue', time:'15 min', sub:'Play it, then repeat each line aloud', go:'dialogues'},
+  {id:'speak', icon:'🗣️', title:'Mic practice', time:'10 min', sub:'Use 🎤 on 5 words or lines', go:'vocab'},
+  {id:'quiz', icon:'🧠', title:'Take a quiz', time:'8 min', sub:'Test what you learned', go:'quiz'},
+];
+
+function renderToday(){
+  todayState=JSON.parse(localStorage.getItem(todayKey())||'{}');
+  const box=document.getElementById('todayBox');
+  const dueN=getDueWords().length;
+  const doneCount=TODAY_TASKS.filter(t=>todayState[t.id]).length;
+  const pct=Math.round(doneCount/TODAY_TASKS.length*100);
+  const streak=getStreak();
+
+  // the day being viewed
+  const sel=new Date(selectedDay+'T00:00:00');
+  const isToday = selectedDay===todayStr();
+  const hr=new Date().getHours();
+  const greet=hr<12?'Good morning':hr<18?'Good afternoon':'Good evening';
+  const dateStr=sel.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+
+  // ---- DAY PICKER (this week) ----
+  const week=getWeekDays();
+  const wkLabels=['M','T','W','T','F','S','S'];
+  let picker='<div class="day-picker">';
+  week.forEach((d,i)=>{
+    const ds=d.toISOString().slice(0,10);
+    const st=JSON.parse(localStorage.getItem('today_'+ds)||'{}');
+    const allDone=TODAY_TASKS.every(t=>st[t.id]);
+    const isSel=ds===selectedDay;
+    const isTod=ds===todayStr();
+    let cls='day-pick'; if(isSel) cls+=' sel'; if(allDone) cls+=' complete';
+    picker+='<button class="'+cls+'" data-day="'+ds+'">'+
+      '<span class="dp-dow">'+wkLabels[i]+'</span>'+
+      '<span class="dp-num">'+d.getDate()+'</span>'+
+      (isTod?'<span class="dp-today">•</span>':'')+
+      '</button>';
+  });
+  picker+='</div>';
+
+  // word of the day for the mini-card (based on selected day)
+  const allW=[...VOCAB.a2b1,...VOCAB.b1b2];
+  const dayNum=Math.floor((sel-new Date(sel.getFullYear(),0,0))/86400000);
+  const wod=allW[dayNum%allW.length];
+
+  // progress ring
+  const r=26, circ=2*Math.PI*r, off=circ*(1-pct/100);
+
+  let html=picker;
+  html+='<div class="today-head">'+
+    '<div class="today-date">'+(isToday?'🌅 Today · ':'')+dateStr+'</div>'+
+    '<div class="today-greet">'+(isToday?greet+'! 👋':'Plan for this day')+'</div></div>';
+
+  html+='<div class="today-prog-wrap">'+
+    '<div class="ring"><svg width="62" height="62">'+
+      '<circle cx="31" cy="31" r="'+r+'" fill="none" stroke="#2c3142" stroke-width="6"/>'+
+      '<circle cx="31" cy="31" r="'+r+'" fill="none" stroke="#f0a500" stroke-width="6" stroke-linecap="round" stroke-dasharray="'+circ+'" stroke-dashoffset="'+off+'"/>'+
+      '</svg><div class="ring-txt">'+pct+'%</div></div>'+
+    '<div class="today-prog-info"><div class="t1">'+doneCount+' of '+TODAY_TASKS.length+' tasks done</div>'+
+      '<div class="t2">'+(pct===100?'🎉 You finished your hour today!':'Keep going — you\'ve got this.')+'</div></div>'+
+    '</div>';
+
+  if(streak>0 && isToday) html+='<div class="today-streak">🔥 '+streak+'-day streak — don\'t break it!</div>';
+
+  html+=TODAY_TASKS.map(t=>{
+    const done=!!todayState[t.id];
+    let extra='';
+    if(t.id==='review') extra=t.sub+' · <b style="color:var(--gold)">'+dueN+' due now</b>';
+    else extra=t.sub;
+
+    let content='';
+    if(t.id==='wotd'){
+      content='<div class="task-content"><div class="today-mini-word">'+wod.w+
+        ' <button class="today-mini-spk" onclick="speak('+JSON.stringify(wod.w).replace(/"/g,'&quot;')+', this)">🔊</button></div>'+
+        '<div class="today-mini-mean">'+wod.m+' — "'+wod.ex+'"</div></div>';
+    } else if(t.go){
+      content='<div class="task-content"><button class="task-go" data-goto="'+t.go+'">Open '+t.title.split(' ')[0]+' →</button></div>';
+    }
+
+    return '<div class="task '+(done?'done':'')+'" data-task="'+t.id+'">'+
+      '<div class="task-top">'+
+        '<div class="task-check">✓</div>'+
+        '<div class="task-info"><div class="task-title">'+t.icon+' '+t.title+'</div>'+
+          '<div class="task-sub">'+extra+'</div></div>'+
+        '<span class="task-time">'+t.time+'</span>'+
+      '</div>'+content+'</div>';
+  }).join('');
+
+  if(pct===100){
+    html+='<div class="today-complete"><div class="big">🏆</div>'+
+      '<h3>Day complete!</h3><p>You did your full hour. This daily consistency is exactly what takes you from A2 to B2. See you tomorrow!</p></div>';
+  }
+
+  box.innerHTML=html;
+}
+
+document.getElementById('todayBox').addEventListener('click',e=>{
+  const day=e.target.closest('[data-day]');
+  if(day){ selectedDay=day.dataset.day; renderToday(); return; }
+  const goto=e.target.closest('[data-goto]');
+  if(goto){ document.querySelector('[data-p="'+goto.dataset.goto+'"]').click(); return; }
+  const task=e.target.closest('[data-task]');
+  if(task && e.target.closest('.task-top')){
+    const id=task.dataset.task;
+    todayState[id]=!todayState[id];
+    saveToday();
+    renderToday();
+  }
+});
+
 renderWOTD(); newQuiz();
 renderVocab(); renderWeek(); renderDiaPick(); renderDia();
-updateDueBadge(); renderMethod();
+updateDueBadge(); renderMethod(); renderToday();
 </script>
 </body>
 </html>
