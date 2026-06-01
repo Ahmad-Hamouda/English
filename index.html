@@ -666,37 +666,58 @@ let speakingTxt=null, activeBtn=null;
 let usMaleVoice=null;
 let allVoices=[];
 let savedVoiceName=localStorage.getItem('tts_voice')||'';
+let prefAccent=localStorage.getItem('tts_accent')||'us';   // 'us' or 'uk'
+let prefGender=localStorage.getItem('tts_gender')||'male';  // 'male' or 'female'
+
+const MALE_NAMES=['male','david','mark','mike','matthew','guy','eric','aaron','fred','alex','tom','james','daniel','christopher','john','arthur','george','ryan','oliver','william','liam'];
+const FEMALE_NAMES=['female','samantha','victoria','karen','moira','tessa','fiona','serena','susan','zira','hazel','catherine','emma','amy','joanna','salli','kendra','olivia','sonia','libby','aria','jenny','michelle','ava','allison'];
+
+// detect gender from voice name; returns 'male' | 'female' | 'unknown'
+function voiceGender(v){
+  const n=(v.name||'').toLowerCase();
+  // check female first — "female" contains "male" as a substring
+  if(FEMALE_NAMES.some(x=>n.includes(x))) return 'female';
+  if(MALE_NAMES.some(x=>n.includes(x))) return 'male';
+  return 'unknown';
+}
+// detect accent: 'us' | 'uk' | 'other'
+function voiceAccent(v){
+  const lang=(v.lang||'').toLowerCase();
+  if(lang==='en-us'||lang==='en_us') return 'us';
+  if(lang==='en-gb'||lang==='en_gb') return 'uk';
+  return 'other';
+}
 
 // score a voice for quality: higher = better
 function voiceScore(v){
   const name=(v.name||'').toLowerCase();
-  const lang=(v.lang||'').toLowerCase();
   let s=0;
-  if(lang==='en-us') s+=40; else if(lang.startsWith('en')) s+=20;
-  // network/natural voices sound far better than compact local ones
   if(!v.localService) s+=25;                                  // online/natural voice
   if(name.includes('natural')||name.includes('neural')||name.includes('wavenet')) s+=30;
-  if(name.includes('google')) s+=15;                          // Google US English is good
+  if(name.includes('google')) s+=15;
   if(name.includes('enhanced')||name.includes('premium')) s+=12;
-  // prefer male-sounding names (your preference)
-  const maleNames=['male','david','mark','mike','matthew','guy','eric','aaron','fred','alex','tom','james','daniel','christopher','john'];
-  if(maleNames.some(n=>name.includes(n))) s+=10;
   return s;
 }
+
+// only US + UK voices, filtered by chosen accent & gender, ranked by quality
 function rankedEnglishVoices(){
-  return allVoices
-    .filter(v=>(v.lang||'').toLowerCase().startsWith('en'))
-    .sort((a,b)=>voiceScore(b)-voiceScore(a));
+  let list=allVoices.filter(v=>{ const a=voiceAccent(v); return a==='us'||a==='uk'; });
+  // filter by accent preference
+  let byAccent=list.filter(v=>voiceAccent(v)===prefAccent);
+  if(!byAccent.length) byAccent=list;                          // fallback if none of that accent
+  // filter by gender preference (keep 'unknown' as fallback options)
+  let byGender=byAccent.filter(v=>voiceGender(v)===prefGender);
+  if(!byGender.length) byGender=byAccent;                      // fallback if none match gender
+  return byGender.sort((a,b)=>voiceScore(b)-voiceScore(a));
 }
 function pickUSMaleVoice(){
   allVoices=window.speechSynthesis.getVoices();
-  // honor saved choice if still available
   if(savedVoiceName){
     const saved=allVoices.find(v=>v.name===savedVoiceName);
     if(saved){ usMaleVoice=saved; return; }
   }
   const ranked=rankedEnglishVoices();
-  usMaleVoice = ranked[0] || allVoices[0] || null;
+  usMaleVoice = ranked[0] || allVoices.find(v=>(v.lang||'').toLowerCase().startsWith('en')) || allVoices[0] || null;
 }
 
 function clearBtn(){ if(activeBtn){activeBtn.classList.remove('sp');} activeBtn=null; speakingTxt=null; }
@@ -708,7 +729,8 @@ function speak(text, btn){
   speakingTxt=text; activeBtn=btn; if(btn) btn.classList.add('sp');
   if(!usMaleVoice) pickUSMaleVoice();
   const u=new SpeechSynthesisUtterance(text);
-  u.lang='en-US'; u.rate=rate; u.pitch=0.95;
+  u.lang=(usMaleVoice&&usMaleVoice.lang) || (prefAccent==='uk'?'en-GB':'en-US');
+  u.rate=rate; u.pitch=0.95;
   if(usMaleVoice) u.voice=usMaleVoice;
   u.onend=()=>clearBtn();
   u.onerror=e=>{ if(e.error!=='interrupted') clearBtn(); };
@@ -719,30 +741,45 @@ if('speechSynthesis' in window){
   window.speechSynthesis.onvoiceschanged=()=>{ pickUSMaleVoice(); if(typeof renderVoiceControls==='function') renderVoiceControls(); };
 }
 
-// set voice/speed from the picker
+// set voice/speed/accent/gender from the picker
 function setVoice(name){ savedVoiceName=name; localStorage.setItem('tts_voice',name); pickUSMaleVoice(); }
 function setRate(r){ rate=r; localStorage.setItem('tts_rate', String(r)); }
+function setAccent(a){ prefAccent=a; localStorage.setItem('tts_accent',a); savedVoiceName=''; localStorage.removeItem('tts_voice'); pickUSMaleVoice(); }
+function setGender(g){ prefGender=g; localStorage.setItem('tts_gender',g); savedVoiceName=''; localStorage.removeItem('tts_voice'); pickUSMaleVoice(); }
 
 function renderVoiceControls(){
   const box=document.getElementById('voiceBox'); if(!box) return;
   const ranked=rankedEnglishVoices();
-  if(!ranked.length){ box.innerHTML='<label>🔊 Voice</label><div style="color:var(--mut);font-size:12px">Loading voices… tap 🔊 once if the list stays empty.</div>'; return; }
   const cur=usMaleVoice ? usMaleVoice.name : (ranked[0]&&ranked[0].name);
   const speeds=[['Slow',0.7],['Normal',0.85],['Fast',1.0]];
   box.innerHTML=
-    '<label>🔊 Voice (best ones are at the top)</label>'+
-    '<select class="voice-select" id="voiceSel">'+
-      ranked.map(v=>{
-        const tag=(!v.localService)?' · natural':'';
-        return '<option value="'+v.name.replace(/"/g,'&quot;')+'"'+(v.name===cur?' selected':'')+'>'+v.name+tag+'</option>';
-      }).join('')+
-    '</select>'+
+    '<label>🌍 Accent</label><div class="speed-row" style="margin-bottom:10px">'+
+      '<button class="speed-btn '+(prefAccent==='us'?'on':'')+'" data-accent="us">🇺🇸 US</button>'+
+      '<button class="speed-btn '+(prefAccent==='uk'?'on':'')+'" data-accent="uk">🇬🇧 UK</button>'+
+    '</div>'+
+    '<label>🧑 Voice gender</label><div class="speed-row" style="margin-bottom:10px">'+
+      '<button class="speed-btn '+(prefGender==='male'?'on':'')+'" data-gender="male">♂ Male</button>'+
+      '<button class="speed-btn '+(prefGender==='female'?'on':'')+'" data-gender="female">♀ Female</button>'+
+    '</div>'+
+    (ranked.length
+      ? '<label>🔊 Voice ('+ranked.length+' available)</label>'+
+        '<select class="voice-select" id="voiceSel">'+
+          ranked.map(v=>{
+            const tag=(!v.localService)?' · natural':'';
+            return '<option value="'+v.name.replace(/"/g,'&quot;')+'"'+(v.name===cur?' selected':'')+'>'+v.name+tag+'</option>';
+          }).join('')+
+        '</select>'
+      : '<div style="color:var(--mut);font-size:12px;margin-bottom:8px">No '+prefAccent.toUpperCase()+' '+prefGender+' voice found on this phone. Try the other gender/accent, or install more voices in your phone\'s Text-to-speech settings.</div>')+
     '<label>Speed</label><div class="speed-row">'+
       speeds.map(s=>'<button class="speed-btn '+(Math.abs(rate-s[1])<0.03?'on':'')+'" data-rate="'+s[1]+'">'+s[0]+'</button>').join('')+
     '</div>'+
     '<button class="voice-test" id="voiceTest">▶ Test this voice</button>';
 }
 document.addEventListener('click',e=>{
+  const ac=e.target.closest('[data-accent]');
+  if(ac){ setAccent(ac.dataset.accent); renderVoiceControls(); speak('Hello, this is the selected accent.', null); return; }
+  const gn=e.target.closest('[data-gender]');
+  if(gn){ setGender(gn.dataset.gender); renderVoiceControls(); speak('Hello, this is the selected voice.', null); return; }
   const sp=e.target.closest('[data-rate]');
   if(sp){ setRate(parseFloat(sp.dataset.rate)); renderVoiceControls(); speak('This is the speaking speed.', null); return; }
   if(e.target.id==='voiceTest'){ speak('Hello! This is how this voice sounds when you practice English.', null); return; }
@@ -1052,7 +1089,7 @@ function playWholeDialogue(btn, diaObj){
   const next=()=>{
     if(!diaQueue || idx>=d.lines.length){ diaQueue=null; btn.classList.remove('sp'); btn.textContent='🎬 Play whole conversation'; return; }
     const u=new SpeechSynthesisUtterance(d.lines[idx].t);
-    u.lang='en-US'; u.rate=rate; u.pitch=0.9;
+    u.lang=(usMaleVoice&&usMaleVoice.lang)||(prefAccent==='uk'?'en-GB':'en-US'); u.rate=rate; u.pitch=0.95;
     if(!usMaleVoice) pickUSMaleVoice();
     if(usMaleVoice) u.voice=usMaleVoice;
     u.onend=()=>{ idx++; setTimeout(next,350); };
