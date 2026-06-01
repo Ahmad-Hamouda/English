@@ -44,6 +44,31 @@
   .arrow{color:var(--mut);font-size:16px}
   .timeline{color:var(--mut);font-size:12px;text-align:center;margin-bottom:24px}
 
+  /* XP / level / badges */
+  .xp-card{margin-top:18px;background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:14px 16px;box-shadow:var(--shadow);text-align:left}
+  .xp-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+  .xp-lvl{font-weight:700;font-size:14px;color:var(--gold)}
+  .xp-num{font-size:12px;color:var(--mut)}
+  .xp-bar{height:9px;background:var(--surf);border-radius:100px;overflow:hidden}
+  .xp-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-soft));border-radius:100px;transition:width .5s var(--ease)}
+  .xp-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+  .xp-badge{font-size:18px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:var(--surf);border:1px solid var(--bd);border-radius:9px}
+  .xp-toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(20px);background:linear-gradient(135deg,var(--gold),var(--gold-soft));color:#1a1206;font-weight:700;font-size:14px;padding:11px 22px;border-radius:100px;box-shadow:var(--shadow-lg);opacity:0;transition:all .3s var(--ease);z-index:999;pointer-events:none}
+  .xp-toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .celebrate{position:fixed;inset:0;background:rgba(8,10,14,.8);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:1000;padding:24px}
+  .celebrate.show{display:flex;animation:fade .3s}
+  .celebrate-card{background:var(--card);border:1px solid var(--gold);border-radius:24px;padding:36px 28px;text-align:center;max-width:340px;position:relative;overflow:hidden;box-shadow:0 0 60px rgba(232,168,56,.3)}
+  .celebrate-emoji{font-size:60px;margin-bottom:10px;animation:pop .5s var(--ease)}
+  @keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.2)}100%{transform:scale(1)}}
+  .celebrate-title{font-family:'Fraunces',serif;font-size:24px;font-weight:900;color:var(--gold);margin-bottom:8px}
+  .celebrate-msg{font-size:15px;color:var(--tx2);line-height:1.5;margin-bottom:22px}
+  .celebrate-btn{padding:13px 32px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--gold),var(--gold-soft));color:#1a1206;font-weight:700;font-size:15px;cursor:pointer;font-family:'DM Sans',sans-serif}
+  .confetti{position:absolute;top:-10px;width:8px;height:8px;border-radius:2px;animation:confettiFall 1.2s ease-in forwards}
+  @keyframes confettiFall{to{transform:translateY(400px) rotate(540deg);opacity:0}}
+  .zones{display:flex;gap:8px;margin-bottom:12px}
+  .zone{flex:1;padding:13px 0;border-radius:14px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);font-size:14px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s var(--ease)}
+  .zone:hover{border-color:var(--bd2);color:var(--tx2)}
+  .zone.on{background:linear-gradient(135deg,var(--gold),var(--gold-soft));color:#1a1206;border-color:var(--gold);box-shadow:0 4px 16px rgba(232,168,56,.28)}
   .tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:20px;scrollbar-width:none}
   .tabs::-webkit-scrollbar{display:none}
   .tab{flex:0 0 auto;padding:10px 18px;border-radius:12px;border:1px solid var(--bd);background:var(--surf);color:var(--mut);font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:6px;transition:all .2s var(--ease)}
@@ -351,20 +376,26 @@
       <span class="lvl goal">B2 (goal)</span>
     </div>
     <div class="timeline">⏱️ Realistic timeline: 6–9 months at 1 hour daily · ~2,500 new words to learn</div>
+    <div class="xp-card" id="xpCard"></div>
   </header>
 
+  <div class="zones" id="zones">
+    <button class="zone on" data-zone="learn">🎯 Learn</button>
+    <button class="zone" data-zone="library">📖 Library</button>
+    <button class="zone" data-zone="practice">💪 Practice</button>
+  </div>
   <div class="tabs" id="tabs">
-    <button class="tab on" data-p="today">🌅 Today</button>
-    <button class="tab" data-p="plan">📅 Daily Plan</button>
-    <button class="tab" data-p="review">🔁 Review <span class="due-count" id="dueCount"></span></button>
-    <button class="tab" data-p="week">✅ Week Tracker</button>
-    <button class="tab" data-p="vocab">📚 Common Words</button>
-    <button class="tab" data-p="biz">💼 Business English</button>
-    <button class="tab" data-p="dialogues">💬 Dialogues</button>
-    <button class="tab" data-p="quiz">🧠 Quiz</button>
-    <button class="tab" data-p="grammar">🔧 Grammar</button>
-    <button class="tab" data-p="method">🎓 How to Learn</button>
-    <button class="tab" data-p="voice">🔊 Voice Settings</button>
+    <button class="tab on" data-p="today" data-z="learn">🌅 Today</button>
+    <button class="tab" data-p="plan" data-z="learn">📅 Daily Plan</button>
+    <button class="tab" data-p="method" data-z="learn">🎓 How to Learn</button>
+    <button class="tab" data-p="vocab" data-z="library">📚 Common Words</button>
+    <button class="tab" data-p="biz" data-z="library">💼 Business English</button>
+    <button class="tab" data-p="dialogues" data-z="library">💬 Dialogues</button>
+    <button class="tab" data-p="grammar" data-z="library">🔧 Grammar</button>
+    <button class="tab" data-p="review" data-z="practice">🔁 Review <span class="due-count" id="dueCount"></span></button>
+    <button class="tab" data-p="quiz" data-z="practice">🧠 Quiz</button>
+    <button class="tab" data-p="week" data-z="practice">✅ Week Tracker</button>
+    <button class="tab" data-p="voice" data-z="library">🔊 Voice</button>
   </div>
 
   <!-- TODAY -->
@@ -1297,18 +1328,112 @@ function checkSpoken(target, inputEl, resultEl){
 }
 
 /* ---------- TABS ---------- */
-document.getElementById('tabs').addEventListener('click',e=>{
-  const b=e.target.closest('.tab'); if(!b) return;
+let currentZone='learn';
+
+/* ---------- XP / LEVELS / BADGES (gamification) ---------- */
+const XP_PER_LEVEL=100;
+let game=JSON.parse(localStorage.getItem('game')||'{"xp":0,"badges":[]}');
+function saveGame(){ localStorage.setItem('game', JSON.stringify(game)); }
+function gameLevel(){ return Math.floor(game.xp/XP_PER_LEVEL)+1; }
+function xpInLevel(){ return game.xp % XP_PER_LEVEL; }
+const LEVEL_TITLES=['Beginner','Explorer','Learner','Achiever','Skilled','Confident','Advanced','Fluent','Expert','Master'];
+function levelTitle(){ return LEVEL_TITLES[Math.min(gameLevel()-1, LEVEL_TITLES.length-1)]; }
+
+const BADGES=[
+  {id:'first_step', icon:'👟', name:'First Step', desc:'Earned your first XP', test:g=>g.xp>=10},
+  {id:'word_collector', icon:'📚', name:'Word Collector', desc:'10 words in Review', test:g=>Object.keys(srs||{}).length>=10},
+  {id:'quiz_ace', icon:'🧠', name:'Quiz Ace', desc:'Scored 100 XP', test:g=>g.xp>=100},
+  {id:'streak_3', icon:'🔥', name:'On Fire', desc:'3-day streak', test:g=>getStreak()>=3},
+  {id:'streak_7', icon:'⚡', name:'Unstoppable', desc:'7-day streak', test:g=>getStreak()>=7},
+  {id:'level_5', icon:'⭐', name:'Rising Star', desc:'Reached Level 5', test:g=>gameLevel()>=5},
+  {id:'level_10', icon:'👑', name:'English Royalty', desc:'Reached Level 10', test:g=>gameLevel()>=10},
+];
+
+function addXP(amount, reason){
+  const before=gameLevel();
+  game.xp+=amount; saveGame();
+  const after=gameLevel();
+  checkBadges();
+  renderXP();
+  if(after>before) celebrate('🎉 Level Up!', 'You reached Level '+after+' — '+levelTitle()+'!');
+  else showXpToast('+'+amount+' XP'+(reason?' · '+reason:''));
+}
+function checkBadges(){
+  BADGES.forEach(b=>{
+    if(!game.badges.includes(b.id) && b.test(game)){
+      game.badges.push(b.id); saveGame();
+      celebrate(b.icon+' Badge unlocked!', b.name+' — '+b.desc);
+    }
+  });
+}
+function renderXP(){
+  const el=document.getElementById('xpCard'); if(!el) return;
+  const pct=Math.round(xpInLevel()/XP_PER_LEVEL*100);
+  el.innerHTML=
+    '<div class="xp-top"><span class="xp-lvl">⭐ Level '+gameLevel()+' · '+levelTitle()+'</span>'+
+    '<span class="xp-num">'+xpInLevel()+' / '+XP_PER_LEVEL+' XP</span></div>'+
+    '<div class="xp-bar"><div class="xp-fill" style="width:'+pct+'%"></div></div>'+
+    (game.badges.length?'<div class="xp-badges">'+game.badges.map(id=>{
+      const b=BADGES.find(x=>x.id===id); return b?'<span class="xp-badge" title="'+b.name+'">'+b.icon+'</span>':'';
+    }).join('')+'</div>':'');
+}
+let xpToastTimer=null;
+function showXpToast(txt){
+  let t=document.getElementById('xpToast');
+  if(!t){ t=document.createElement('div'); t.id='xpToast'; t.className='xp-toast'; document.body.appendChild(t); }
+  t.textContent=txt; t.classList.add('show');
+  clearTimeout(xpToastTimer); xpToastTimer=setTimeout(()=>t.classList.remove('show'),1800);
+}
+function celebrate(title, msg){
+  let c=document.getElementById('celebrate');
+  if(!c){ c=document.createElement('div'); c.id='celebrate'; c.className='celebrate'; document.body.appendChild(c); }
+  c.innerHTML='<div class="celebrate-card"><div class="celebrate-emoji">'+title.split(' ')[0]+'</div>'+
+    '<div class="celebrate-title">'+title.substring(title.indexOf(' ')+1)+'</div>'+
+    '<div class="celebrate-msg">'+msg+'</div>'+
+    '<button class="celebrate-btn" onclick="document.getElementById(\'celebrate\').classList.remove(\'show\')">Awesome! 🎊</button></div>';
+  c.classList.add('show');
+  // confetti
+  for(let i=0;i<24;i++){
+    const conf=document.createElement('div'); conf.className='confetti';
+    conf.style.left=Math.random()*100+'%';
+    conf.style.background=['#e8a838','#54c9a6','#8b9bff','#e36a6a','#62b0e8'][i%5];
+    conf.style.animationDelay=(Math.random()*.3)+'s';
+    c.querySelector('.celebrate-card').appendChild(conf);
+  }
+}
+function showZone(z){
+  currentZone=z;
+  document.querySelectorAll('.zone').forEach(el=>el.classList.toggle('on', el.dataset.zone===z));
+  // show only tabs in this zone
+  let firstTab=null;
+  document.querySelectorAll('.tab').forEach(t=>{
+    const inZone=t.dataset.z===z;
+    t.style.display=inZone?'flex':'none';
+    if(inZone && !firstTab) firstTab=t;
+  });
+  // activate the first tab of the zone
+  if(firstTab) openTab(firstTab);
+}
+function openTab(b){
   document.querySelectorAll('.tab').forEach(t=>t.classList.remove('on'));
   b.classList.add('on');
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('on'));
   document.getElementById('p-'+b.dataset.p).classList.add('on');
-  if(b.dataset.p==='quiz') startNewRound();
-  if(b.dataset.p==='voice') renderVoiceControls();
-  if(b.dataset.p==='biz'){ renderBizPick(); renderBiz(); }
-  if(b.dataset.p==='review') startReview();
-  if(b.dataset.p==='method') renderMethod();
-  if(b.dataset.p==='today') renderToday();
+  const p=b.dataset.p;
+  if(p==='quiz') startNewRound();
+  if(p==='voice') renderVoiceControls();
+  if(p==='biz'){ renderBizPick(); renderBiz(); }
+  if(p==='review') startReview();
+  if(p==='method') renderMethod();
+  if(p==='today') renderToday();
+}
+document.getElementById('zones').addEventListener('click',e=>{
+  const z=e.target.closest('.zone'); if(!z) return;
+  showZone(z.dataset.zone);
+});
+document.getElementById('tabs').addEventListener('click',e=>{
+  const b=e.target.closest('.tab'); if(!b) return;
+  openTab(b);
 });
 
 /* ---------- VOCAB ---------- */
@@ -1698,7 +1823,7 @@ function revealReview(){ reviewRevealed=true; renderReview(); }
 document.getElementById('reviewBox').addEventListener('click',e=>{
   const r=e.target.closest('[data-rate]'); if(!r) return;
   const v=reviewQueue[reviewIdx];
-  srsRate(v.w, r.dataset.rate);
+  srsRate(v.w, r.dataset.rate); addXP(2,"review");
   reviewIdx++; reviewRevealed=false;
   renderReview();
 });
@@ -1835,7 +1960,7 @@ document.getElementById('quizBox').addEventListener('click',e=>{
   const chosen=quizCurrent.opts[+b.dataset.qi];
   const right=chosen.w===quizCurrent.correct.w;
   quizStats.total++;
-  if(right){ quizStats.correct++; quizRound.right++; }
+  if(right){ quizStats.correct++; quizRound.right++; addXP(5,'correct answer'); }
   localStorage.setItem('quiz_stats',JSON.stringify(quizStats));
   renderQuiz(true, chosen);
 });
@@ -2002,6 +2127,14 @@ function renderToday(){
           '<div class="vphon">🗣️ '+respell(w.w)+'</div>'+
           '<div class="vmean">'+w.m+'</div>'+
           '<div class="vex"><div class="vex-txt">"'+w.ex+'"</div></div>'+
+          ((w.syn||w.opp||w.ex2||w.tip)?
+            '<button class="vdetails-btn" data-tdetails="tw'+wi+'">More details ▾</button>'+
+            '<div class="vdetails" id="tdet-tw'+wi+'" style="display:none">'+
+              (w.syn?'<div class="vd-row"><span class="vd-lbl">Similar:</span> '+w.syn+'</div>':'')+
+              (w.opp?'<div class="vd-row"><span class="vd-lbl">Opposite:</span> '+w.opp+'</div>':'')+
+              (w.ex2?'<div class="vd-row"><span class="vd-lbl">Another example:</span> <i>"'+w.ex2+'"</i></div>':'')+
+              (w.tip?'<div class="vd-row vd-tip"><span class="vd-lbl">💡 Tip:</span> '+w.tip+'</div>':'')+
+            '</div>':'')+
           '<button class="vlearn '+(added?'added':'')+'" data-tadd="'+encodeURIComponent(w.w)+'">'+(added?'✓ In Review':'+ Add to Review')+'</button>'+
           '<div class="mic-result" id="tres-tw'+wi+'"></div>'+
           '</div>';
@@ -2151,6 +2284,13 @@ function renderDayQuiz(){
 }
 
 document.getElementById('todayBox').addEventListener('click',e=>{
+  // toggle word details in today
+  const tdet=e.target.closest('[data-tdetails]');
+  if(tdet){
+    const box=document.getElementById('tdet-'+tdet.dataset.tdetails);
+    if(box){ const open=box.style.display!=='none'; box.style.display=open?'none':'block'; tdet.textContent=open?'More details ▾':'Hide details ▴'; }
+    return;
+  }
   // day quiz answer
   const dq=e.target.closest('[data-dq]');
   if(dq){
@@ -2159,7 +2299,7 @@ document.getElementById('todayBox').addEventListener('click',e=>{
     const chosen=dayQuiz.opts[+dq.dataset.dq];
     dayQuiz._chosen=chosen;
     const right=chosen.w===dayQuiz.correct.w;
-    if(right) dayQuizRound.right++;
+    if(right){ dayQuizRound.right++; addXP(3); }
     drawDayQuiz(true, chosen);
     return;
   }
@@ -2217,19 +2357,23 @@ document.getElementById('todayBox').addEventListener('click',e=>{
   const toggle=e.target.closest('[data-toggle]');
   if(toggle){
     const id=toggle.dataset.toggle;
+    const wasDone=todayState[id];
     todayState[id]=!todayState[id];
-    saveToday(); updateDueBadge(); renderToday();
+    saveToday(); updateDueBadge();
+    if(!wasDone && todayState[id]) addXP(10,'task done');
+    renderToday();
     return;
   }
 
   const goto=e.target.closest('[data-goto]');
-  if(goto){ document.querySelector('[data-p="'+goto.dataset.goto+'"]').click(); return; }
+  if(goto){ const tb=document.querySelector('[data-p="'+goto.dataset.goto+'"]'); if(tb){ showZone(tb.dataset.z); openTab(tb); } return; }
 });
 
 renderWOTD(); startNewRound(); renderVoiceControls(); renderBizPick(); renderBiz();
 renderLevelPick(); renderVocab(); renderWeek(); renderDiaPick(); renderDia();
 selectedLesson=firstIncompleteLesson(); todayState=lessonState(selectedLesson);
 updateDueBadge(); renderMethod(); renderToday();
+renderXP(); showZone('learn');
 </script>
 </body>
 </html>
