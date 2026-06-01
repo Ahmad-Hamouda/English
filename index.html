@@ -323,6 +323,7 @@
     <button class="tab" data-p="review">🔁 Review <span class="due-count" id="dueCount"></span></button>
     <button class="tab" data-p="week">✅ Week Tracker</button>
     <button class="tab" data-p="vocab">📚 Common Words</button>
+    <button class="tab" data-p="biz">💼 Business English</button>
     <button class="tab" data-p="dialogues">💬 Dialogues</button>
     <button class="tab" data-p="quiz">🧠 Quiz</button>
     <button class="tab" data-p="grammar">🔧 Grammar</button>
@@ -398,6 +399,13 @@
     <div class="speak-unsupported" id="ttsUnsupported">⚠️ Speech not supported here</div>
     <p class="ttsnote">🔊 hear it · 🎤 tap & speak → instant pronunciation check · 🇺🇸 US male</p>
     <div id="vocabList"></div>
+  </div>
+
+  <!-- BUSINESS ENGLISH -->
+  <div class="panel" id="p-biz">
+    <p class="sub" style="margin-bottom:12px">Real phrases used in the workplace. Pick a field, then listen 🔊 and practice 🎤 each phrase.</p>
+    <div class="levelpick" id="bizpick"></div>
+    <div id="bizList"></div>
   </div>
 
   <!-- DIALOGUES -->
@@ -505,6 +513,45 @@ const VOCAB = {
     {w:"take part in", pos:"phrase", m:"to join an activity", ex:"I want to take part in the contest."},
     {w:"look forward to", pos:"phrase", m:"to feel excited about", ex:"I look forward to seeing you."},
     {w:"get used to", pos:"phrase", m:"to become familiar with", ex:"I got used to the new job."},
+    {w:"enough", pos:"adv", m:"as much as needed", ex:"We have enough time."},
+    {w:"already", pos:"adv", m:"before now", ex:"I have already finished."},
+    {w:"perhaps", pos:"adv", m:"maybe", ex:"Perhaps we should wait."},
+    {w:"probably", pos:"adv", m:"very likely", ex:"It will probably rain today."},
+    {w:"especially", pos:"adv", m:"more than usual / particularly", ex:"I love fruit, especially mangoes."},
+    {w:"quickly", pos:"adv", m:"in a fast way", ex:"She finished the task quickly."},
+    {w:"carefully", pos:"adv", m:"with attention", ex:"Please read the instructions carefully."},
+    {w:"suddenly", pos:"adv", m:"quickly and unexpectedly", ex:"Suddenly, the lights went off."},
+    {w:"enjoy", pos:"verb", m:"to get pleasure from", ex:"I enjoy listening to music."},
+    {w:"hope", pos:"verb", m:"to want something to happen", ex:"I hope you feel better soon."},
+    {w:"worry", pos:"verb", m:"to feel anxious", ex:"Don't worry about the test."},
+    {w:"remember", pos:"verb", m:"to keep in mind", ex:"Remember to call me tonight."},
+    {w:"forget", pos:"verb", m:"to not remember", ex:"I forgot my password."},
+    {w:"believe", pos:"verb", m:"to think something is true", ex:"I believe you can do it."},
+    {w:"agree", pos:"verb", m:"to have the same opinion", ex:"I agree with your idea."},
+    {w:"compare", pos:"verb", m:"to look at differences", ex:"Let's compare the two phones."},
+    {w:"happen", pos:"verb", m:"to take place", ex:"What happened yesterday?"},
+    {w:"travel", pos:"verb", m:"to go from place to place", ex:"I love to travel in summer."},
+    {w:"choose", pos:"verb", m:"to pick / select", ex:"Choose the answer you think is right."},
+    {w:"spend", pos:"verb", m:"to use time or money", ex:"I spend an hour studying daily."},
+    {w:"return", pos:"verb", m:"to come/give back", ex:"Please return the book tomorrow."},
+    {w:"introduce", pos:"verb", m:"to present someone/something new", ex:"Let me introduce my friend."},
+    {w:"discuss", pos:"verb", m:"to talk about", ex:"We discussed the plan."},
+    {w:"contain", pos:"verb", m:"to have inside", ex:"This drink contains sugar."},
+    {w:"create", pos:"verb", m:"to make something new", ex:"She created a beautiful design."},
+    {w:"protect", pos:"verb", m:"to keep safe", ex:"Sunglasses protect your eyes."},
+    {w:"repair", pos:"verb", m:"to fix", ex:"He repaired my phone."},
+    {w:"deliver", pos:"verb", m:"to bring to a place", ex:"They deliver food to your home."},
+    {w:"announce", pos:"verb", m:"to tell publicly", ex:"They announced the results."},
+    {w:"celebrate", pos:"verb", m:"to do something special for an event", ex:"We celebrated her birthday."},
+    {w:"organize", pos:"verb", m:"to arrange / plan", ex:"I organized my desk."},
+    {w:"order", pos:"verb", m:"to ask for goods/food", ex:"I ordered a pizza."},
+    {w:"weather", pos:"noun", m:"the state of the air (rain, sun)", ex:"The weather is nice today."},
+    {w:"reason", pos:"noun", m:"why something happens", ex:"What's the reason for the delay?"},
+    {w:"advice", pos:"noun", m:"a helpful opinion", ex:"She gave me good advice."},
+    {w:"problem", pos:"noun", m:"a difficult situation", ex:"We solved the problem."},
+    {w:"solution", pos:"noun", m:"an answer to a problem", ex:"There's a simple solution."},
+    {w:"information", pos:"noun", m:"facts / knowledge", ex:"I need more information."},
+    {w:"situation", pos:"noun", m:"the conditions at a time", ex:"It's a difficult situation."},
   ],
   b1b2: [
     {w:"nevertheless", pos:"adv", m:"in spite of that", ex:"It was hard; nevertheless, she succeeded."},
@@ -557,6 +604,29 @@ const VOCAB = {
     {w:"as far as I'm concerned", pos:"phrase", m:"in my opinion", ex:"As far as I'm concerned, it's fine."},
     {w:"give rise to", pos:"phrase", m:"to cause", ex:"The decision gave rise to problems."},
     {w:"play a role in", pos:"phrase", m:"to be a factor in", ex:"Luck plays a role in success."},
+    {w:"efficient", pos:"adj", m:"working well without waste", ex:"The new system is more efficient."},
+    {w:"reliable", pos:"adj", m:"can be trusted", ex:"He is a reliable employee."},
+    {w:"flexible", pos:"adj", m:"able to change easily", ex:"My schedule is flexible."},
+    {w:"appropriate", pos:"adj", m:"suitable / correct for a situation", ex:"Wear appropriate clothes for the interview."},
+    {w:"considerable", pos:"adj", m:"fairly large", ex:"It saved a considerable amount of time."},
+    {w:"overcome", pos:"verb", m:"to deal with a difficulty", ex:"She overcame many challenges."},
+    {w:"distinguish", pos:"verb", m:"to see the difference", ex:"It's hard to distinguish the twins."},
+    {w:"impact", pos:"noun", m:"a strong effect", ex:"The news had a big impact."},
+    {w:"benefit", pos:"noun", m:"an advantage", ex:"Exercise has many benefits."},
+    {w:"factor", pos:"noun", m:"one thing that influences a result", ex:"Cost is an important factor."},
+    {w:"aspect", pos:"noun", m:"one part of something", ex:"Let's look at every aspect."},
+    {w:"tendency", pos:"noun", m:"a usual way of behaving", ex:"He has a tendency to be late."},
+    {w:"perspective", pos:"noun", m:"a point of view", ex:"Try to see it from my perspective."},
+    {w:"assumption", pos:"noun", m:"something believed without proof", ex:"That's a wrong assumption."},
+    {w:"evidence", pos:"noun", m:"facts that prove something", ex:"There's no evidence for that."},
+    {w:"capable", pos:"adj", m:"able to do something", ex:"She's capable of great work."},
+    {w:"aware", pos:"adj", m:"knowing about something", ex:"I'm aware of the risks."},
+    {w:"relevant", pos:"adj", m:"connected to the topic", ex:"Please keep your points relevant."},
+    {w:"genuine", pos:"adj", m:"real / sincere", ex:"She has a genuine interest in art."},
+    {w:"complex", pos:"adj", m:"complicated / hard to understand", ex:"It's a complex problem."},
+    {w:"vague", pos:"adj", m:"not clear / not exact", ex:"His answer was too vague."},
+    {w:"anticipate", pos:"verb", m:"to expect / prepare for", ex:"We anticipate some delays."},
+    {w:"justify", pos:"verb", m:"to give a good reason for", ex:"How do you justify this cost?"},
   ],
   connect: [
     {w:"on the other hand", pos:"phrase", m:"shows the opposite side", ex:"It's expensive; on the other hand, it lasts long."},
@@ -621,7 +691,152 @@ const VOCAB = {
     {w:"work out", pos:"phrasal", m:"to exercise / solve", ex:"I work out at the gym daily."},
     {w:"set up", pos:"phrasal", m:"to arrange / establish", ex:"They set up a new company."},
     {w:"run out of", pos:"phrasal", m:"to have none left", ex:"We ran out of milk."},
+    {w:"bring up", pos:"phrasal", m:"to mention / raise a topic", ex:"She brought up an interesting point."},
+    {w:"call off", pos:"phrasal", m:"to cancel", ex:"They called off the meeting."},
+    {w:"check in", pos:"phrasal", m:"to register at a hotel/airport", ex:"We checked in at 3 PM."},
+    {w:"check out", pos:"phrasal", m:"to leave a hotel / look at", ex:"Check out this new app."},
+    {w:"figure out", pos:"phrasal", m:"to understand / solve", ex:"I can't figure out this problem."},
+    {w:"fill in", pos:"phrasal", m:"to complete a form", ex:"Please fill in the form."},
+    {w:"hang on", pos:"phrasal", m:"to wait", ex:"Hang on, I'll be right back."},
+    {w:"hold on", pos:"phrasal", m:"to wait / grip", ex:"Hold on a second, please."},
+    {w:"keep up", pos:"phrasal", m:"to stay at the same pace", ex:"Keep up the good work!"},
+    {w:"make up", pos:"phrasal", m:"to invent / reconcile", ex:"He made up a funny story."},
+    {w:"pick up", pos:"phrasal", m:"to lift / collect / learn", ex:"I'll pick you up at 8."},
+    {w:"point out", pos:"phrasal", m:"to show / mention", ex:"She pointed out my mistake."},
+    {w:"set off", pos:"phrasal", m:"to start a journey", ex:"We set off early in the morning."},
+    {w:"sort out", pos:"phrasal", m:"to organize / solve", ex:"Let me sort out this mess."},
+    {w:"take over", pos:"phrasal", m:"to take control of", ex:"She took over the project."},
+    {w:"throw away", pos:"phrasal", m:"to put in the trash", ex:"Don't throw away that paper."},
+    {w:"try on", pos:"phrasal", m:"to put on clothes to test", ex:"Can I try on this shirt?"},
+    {w:"warm up", pos:"phrasal", m:"to prepare before activity", ex:"Warm up before you exercise."},
+    {w:"calm down", pos:"phrasal", m:"to become relaxed", ex:"Calm down, everything is fine."},
+    {w:"cut down on", pos:"phrasal", m:"to reduce", ex:"I'm cutting down on sugar."},
+    {w:"back up", pos:"phrasal", m:"to support / make a copy", ex:"Back up your files regularly."},
+    {w:"break up", pos:"phrasal", m:"to end a relationship", ex:"They broke up last month."},
+    {w:"catch up", pos:"phrasal", m:"to reach the same level", ex:"I need to catch up on work."},
+    {w:"come across", pos:"phrasal", m:"to find by chance", ex:"I came across an old photo."},
+    {w:"count on", pos:"phrasal", m:"to rely on", ex:"You can count on me."},
+    {w:"deal with", pos:"phrasal", m:"to handle / manage", ex:"I'll deal with this problem."},
+    {w:"drop off", pos:"phrasal", m:"to leave someone/something", ex:"I'll drop off the kids at school."},
+    {w:"end up", pos:"phrasal", m:"to finally be in a situation", ex:"We ended up staying home."},
+    {w:"get back", pos:"phrasal", m:"to return", ex:"I'll get back to you soon."},
+    {w:"go through", pos:"phrasal", m:"to experience / examine", ex:"She went through a hard time."},
+    {w:"grow up", pos:"phrasal", m:"to become an adult", ex:"I grew up in Cairo."},
+    {w:"look into", pos:"phrasal", m:"to investigate", ex:"We'll look into the issue."},
+    {w:"move on", pos:"phrasal", m:"to progress / leave the past", ex:"It's time to move on."},
+    {w:"pass away", pos:"phrasal", m:"to die (polite)", ex:"His grandfather passed away."},
+    {w:"put together", pos:"phrasal", m:"to assemble / create", ex:"I put together a report."},
+    {w:"show up", pos:"phrasal", m:"to arrive / appear", ex:"He didn't show up."},
+    {w:"stand out", pos:"phrasal", m:"to be noticeable", ex:"Her work really stands out."},
+    {w:"take after", pos:"phrasal", m:"to resemble a family member", ex:"She takes after her mother."},
+    {w:"work on", pos:"phrasal", m:"to spend effort improving", ex:"I'm working on my accent."},
   ]
+};
+
+/* ---------- BUSINESS ENGLISH (by field) ---------- */
+const BIZ = {
+  meetings: { label:"📊 Meetings & Presentations", items:[
+    {w:"Let's get started.", m:"a way to begin a meeting", ex:"Everyone's here, so let's get started."},
+    {w:"Let's go over the agenda.", m:"to review the plan for the meeting", ex:"First, let's go over the agenda."},
+    {w:"I'd like to add something.", m:"to contribute a point", ex:"If I may, I'd like to add something."},
+    {w:"Could you elaborate on that?", m:"asking for more detail", ex:"Interesting — could you elaborate on that?"},
+    {w:"Let's move on to the next point.", m:"to change topic", ex:"Good. Let's move on to the next point."},
+    {w:"To summarize,", m:"to give a short review", ex:"To summarize, we agreed on three actions."},
+    {w:"Let's table that for now.", m:"to postpone a topic", ex:"That's important, but let's table that for now."},
+    {w:"Can we circle back to that?", m:"to return to a point later", ex:"Can we circle back to that after lunch?"},
+    {w:"I'd like to walk you through", m:"to explain step by step", ex:"I'd like to walk you through the results."},
+    {w:"As you can see on this slide,", m:"to point to a visual", ex:"As you can see on this slide, sales rose."},
+    {w:"Let me give you a quick overview.", m:"a short summary", ex:"Let me give you a quick overview of the plan."},
+    {w:"Does anyone have any questions?", m:"inviting questions", ex:"That's all. Does anyone have any questions?"},
+    {w:"Let's wrap up.", m:"to finish the meeting", ex:"We're out of time, so let's wrap up."},
+    {w:"I'll follow up with the notes.", m:"to send a summary later", ex:"I'll follow up with the notes by email."},
+    {w:"Let's take this offline.", m:"to discuss privately later", ex:"Good point — let's take this offline."},
+  ]},
+  emails: { label:"✉️ Emails & Writing", items:[
+    {w:"I hope this email finds you well.", m:"polite email opening", ex:"Hi Sara, I hope this email finds you well."},
+    {w:"I am writing to inquire about", m:"to ask for information", ex:"I am writing to inquire about your services."},
+    {w:"Please find attached", m:"to mention an attachment", ex:"Please find attached the report."},
+    {w:"I would appreciate it if you could", m:"a polite request", ex:"I would appreciate it if you could reply soon."},
+    {w:"Thank you for your prompt reply.", m:"thanking for a fast answer", ex:"Thank you for your prompt reply."},
+    {w:"As per our conversation,", m:"referring to earlier talk", ex:"As per our conversation, here's the plan."},
+    {w:"Please let me know if you have any questions.", m:"polite closing offer", ex:"Please let me know if you have any questions."},
+    {w:"I look forward to hearing from you.", m:"polite closing", ex:"I look forward to hearing from you."},
+    {w:"Apologies for the delay in replying.", m:"saying sorry for a late reply", ex:"Apologies for the delay in replying."},
+    {w:"Just a quick reminder that", m:"a gentle reminder", ex:"Just a quick reminder that the deadline is Friday."},
+    {w:"Could you please confirm", m:"asking to verify", ex:"Could you please confirm the meeting time?"},
+    {w:"I'm reaching out to", m:"to start contact", ex:"I'm reaching out to discuss a partnership."},
+    {w:"Kind regards,", m:"formal email sign-off", ex:"Kind regards, Ahmed."},
+    {w:"Please don't hesitate to contact me.", m:"offering help", ex:"Please don't hesitate to contact me."},
+    {w:"I'll get back to you shortly.", m:"promising a reply soon", ex:"I'll get back to you shortly with details."},
+  ]},
+  negotiation: { label:"🤝 Negotiation & Persuasion", items:[
+    {w:"Let's find a middle ground.", m:"to seek a compromise", ex:"We both want this — let's find a middle ground."},
+    {w:"That works for us.", m:"agreeing to terms", ex:"Yes, that works for us."},
+    {w:"I see your point, but", m:"polite disagreement", ex:"I see your point, but the cost is too high."},
+    {w:"Would you be willing to", m:"a soft request", ex:"Would you be willing to lower the price?"},
+    {w:"Let's meet halfway.", m:"to compromise", ex:"How about we meet halfway on the price?"},
+    {w:"That's a deal breaker for us.", m:"a condition you can't accept", ex:"A late delivery is a deal breaker for us."},
+    {w:"Can we explore other options?", m:"looking for alternatives", ex:"Before deciding, can we explore other options?"},
+    {w:"What did you have in mind?", m:"asking for their proposal", ex:"On the budget — what did you have in mind?"},
+    {w:"I'm afraid we can't agree to that.", m:"polite refusal", ex:"I'm afraid we can't agree to that."},
+    {w:"Let me make you an offer.", m:"to propose terms", ex:"Let me make you an offer you'll like."},
+    {w:"On the condition that", m:"setting a requirement", ex:"We agree, on the condition that you pay upfront."},
+    {w:"Let's put that in writing.", m:"to make it official", ex:"Great. Let's put that in writing."},
+    {w:"I think we have a deal.", m:"reaching agreement", ex:"That sounds fair — I think we have a deal."},
+    {w:"Let's not rush this decision.", m:"slowing down", ex:"It's important. Let's not rush this decision."},
+    {w:"That's our final offer.", m:"the last price", ex:"We can't go lower; that's our final offer."},
+  ]},
+  pm: { label:"📋 Project Management", items:[
+    {w:"What's the deadline?", m:"asking when it's due", ex:"This task looks big — what's the deadline?"},
+    {w:"We're behind schedule.", m:"later than planned", ex:"We're behind schedule on phase two."},
+    {w:"Let's prioritize the tasks.", m:"order by importance", ex:"There's a lot to do; let's prioritize the tasks."},
+    {w:"Who's responsible for this?", m:"asking about ownership", ex:"Who's responsible for the testing?"},
+    {w:"Let's set a milestone.", m:"a key checkpoint", ex:"Let's set a milestone for the end of the month."},
+    {w:"It's out of scope.", m:"not part of the project", ex:"That feature is out of scope for now."},
+    {w:"We need to allocate resources.", m:"to assign people/budget", ex:"We need to allocate resources to this task."},
+    {w:"Let's touch base tomorrow.", m:"to check in briefly", ex:"Let's touch base tomorrow on progress."},
+    {w:"Are we on track?", m:"asking about progress", ex:"With one week left, are we on track?"},
+    {w:"Let's keep stakeholders informed.", m:"updating key people", ex:"Let's keep stakeholders informed of changes."},
+    {w:"This is a blocker.", m:"something stopping progress", ex:"The missing data is a blocker."},
+    {w:"Let's break it down into steps.", m:"to divide a task", ex:"It's complex — let's break it down into steps."},
+    {w:"What are the deliverables?", m:"the expected results", ex:"Before we start, what are the deliverables?"},
+    {w:"We need to manage expectations.", m:"to set realistic goals", ex:"The client wants a lot; we need to manage expectations."},
+    {w:"Let's do a quick stand-up.", m:"a short daily meeting", ex:"Every morning, let's do a quick stand-up."},
+  ]},
+  calls: { label:"📞 Phone & Video Calls", items:[
+    {w:"Can everyone hear me?", m:"checking audio", ex:"Before we start — can everyone hear me?"},
+    {w:"You're on mute.", m:"mic is off", ex:"Sara, we can't hear you — you're on mute."},
+    {w:"Sorry, you cut out.", m:"connection was lost briefly", ex:"Sorry, you cut out. Could you repeat that?"},
+    {w:"Could you speak up, please?", m:"asking for louder", ex:"It's a bit quiet — could you speak up, please?"},
+    {w:"Let me share my screen.", m:"showing your display", ex:"To explain this, let me share my screen."},
+    {w:"Can you see my screen?", m:"checking sharing works", ex:"Okay, can you see my screen now?"},
+    {w:"Let's hop on a quick call.", m:"to start a short call", ex:"This is easier to explain — let's hop on a quick call."},
+    {w:"I'll send you the meeting link.", m:"sharing call access", ex:"I'll send you the meeting link shortly."},
+    {w:"Can we reschedule?", m:"to change the time", ex:"Something came up — can we reschedule?"},
+    {w:"Let's pick up where we left off.", m:"to continue from before", ex:"Let's pick up where we left off last time."},
+    {w:"I'm having connection issues.", m:"bad internet", ex:"Sorry, I'm having connection issues."},
+    {w:"Let me put you on hold.", m:"to pause the call", ex:"One moment — let me put you on hold."},
+    {w:"Thanks for joining.", m:"welcoming attendees", ex:"Thanks for joining, everyone."},
+    {w:"Let's call it a day.", m:"to end the session", ex:"We've covered a lot — let's call it a day."},
+    {w:"I'll drop the notes in the chat.", m:"posting in the chat box", ex:"I'll drop the notes in the chat for you."},
+  ]},
+  finance: { label:"💰 Finance & Numbers", items:[
+    {w:"We're over budget.", m:"spent too much", ex:"We're over budget by ten percent."},
+    {w:"What's the bottom line?", m:"the final result/profit", ex:"Skip the details — what's the bottom line?"},
+    {w:"Let's cut costs.", m:"to reduce spending", ex:"Profits are low, so let's cut costs."},
+    {w:"It's not cost-effective.", m:"not worth the money", ex:"This plan is not cost-effective."},
+    {w:"We need to break even.", m:"to cover costs, no loss", ex:"By June, we need to break even."},
+    {w:"Sales are up by 15%.", m:"increased by a percentage", ex:"Good news — sales are up by 15%."},
+    {w:"Revenue has declined.", m:"income went down", ex:"Revenue has declined this quarter."},
+    {w:"Let's review the figures.", m:"to check the numbers", ex:"Before deciding, let's review the figures."},
+    {w:"That's within budget.", m:"affordable / planned cost", ex:"Good — that's within budget."},
+    {w:"We expect a return on investment.", m:"profit from spending", ex:"We expect a return on investment within a year."},
+    {w:"Let's forecast next quarter.", m:"to predict future numbers", ex:"Let's forecast next quarter's sales."},
+    {w:"The numbers don't add up.", m:"figures are wrong", ex:"Check again — the numbers don't add up."},
+    {w:"We're in the red.", m:"losing money", ex:"After the costs, we're in the red."},
+    {w:"We're in the black.", m:"making profit", ex:"Sales improved, so we're in the black."},
+    {w:"Let's stick to the budget.", m:"to not overspend", ex:"No extra costs — let's stick to the budget."},
+  ]},
 };
 
 const DIALOGUES = [
@@ -1015,6 +1230,7 @@ document.getElementById('tabs').addEventListener('click',e=>{
   document.getElementById('p-'+b.dataset.p).classList.add('on');
   if(b.dataset.p==='quiz') startNewRound();
   if(b.dataset.p==='voice') renderVoiceControls();
+  if(b.dataset.p==='biz'){ renderBizPick(); renderBiz(); }
   if(b.dataset.p==='review') startReview();
   if(b.dataset.p==='method') renderMethod();
   if(b.dataset.p==='today') renderToday();
@@ -1031,6 +1247,45 @@ function addMyWord(w, m, ex){
   saveMyWords(); return true;
 }
 function deleteMyWord(i){ VOCAB.mine.splice(i,1); saveMyWords(); }
+
+/* ---------- BUSINESS ENGLISH ---------- */
+let bizField='meetings';
+function renderBizPick(){
+  document.getElementById('bizpick').innerHTML=Object.keys(BIZ).map(k=>
+    '<button class="lp '+(k===bizField?'on':'')+'" data-bf="'+k+'">'+BIZ[k].label+'</button>').join('');
+}
+function renderBiz(){
+  const items=BIZ[bizField].items;
+  document.getElementById('bizList').innerHTML=items.map((v,i)=>`
+    <div class="vrow">
+      <div class="vtop">
+        <span class="vword" style="font-size:16px">${v.w}</span>
+        <button class="vspeak" data-bsp="${i}">🔊</button>
+        <button class="vmic" data-bmic="${i}">🎤</button>
+      </div>
+      <div class="vmean">${v.m}</div>
+      <div class="vex"><div class="vex-txt">"${v.ex}"</div><button class="vex-speak" data-bsp="${i}-e">🔊</button></div>
+      <button class="vlearn ${srs[v.w]?'added':''}" data-blearn="${i}">${srs[v.w]?'✓ In Review':'+ Add to Review'}</button>
+      <div class="mic-result" id="bres-${i}"></div>
+    </div>`).join('');
+}
+document.getElementById('bizpick').addEventListener('click',e=>{
+  const b=e.target.closest('[data-bf]'); if(!b) return;
+  bizField=b.dataset.bf; renderBizPick(); renderBiz();
+});
+document.getElementById('bizList').addEventListener('click',e=>{
+  const items=BIZ[bizField].items;
+  const learn=e.target.closest('[data-blearn]');
+  if(learn){ const v=items[+learn.dataset.blearn];
+    if(srs[v.w]){ delete srs[v.w]; saveSRS(); } else { srsAdd(v.w); }
+    renderBiz(); updateDueBadge(); return; }
+  const mic=e.target.closest('[data-bmic]');
+  if(mic){ const i=+mic.dataset.bmic;
+    startListening(items[i].w, mic, document.getElementById('bres-'+i), null); return; }
+  const sp=e.target.closest('[data-bsp]');
+  if(sp){ const [i,kind]=sp.dataset.bsp.split('-'); const v=items[+i];
+    speak(kind==='e'?v.ex:v.w, sp); return; }
+});
 
 function renderVocab(){
   const list=document.getElementById('vocabList');
@@ -1870,7 +2125,7 @@ document.getElementById('todayBox').addEventListener('click',e=>{
   if(goto){ document.querySelector('[data-p="'+goto.dataset.goto+'"]').click(); return; }
 });
 
-renderWOTD(); startNewRound(); renderVoiceControls();
+renderWOTD(); startNewRound(); renderVoiceControls(); renderBizPick(); renderBiz();
 renderVocab(); renderWeek(); renderDiaPick(); renderDia();
 selectedLesson=firstIncompleteLesson(); todayState=lessonState(selectedLesson);
 updateDueBadge(); renderMethod(); renderToday();
