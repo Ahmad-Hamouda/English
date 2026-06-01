@@ -114,18 +114,9 @@
   .line-mic.rec{background:rgba(224,90,90,.18);border-color:var(--red);color:var(--red);animation:pulse .8s infinite}
 </style>
   <meta name="theme-color" content="#0e1016">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').catch(()=>{});
-      });
-    }
-  </script>
+  <script>if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));}</script>
 </head>
 <body>
 <div class="wrap">
@@ -206,7 +197,7 @@
       <button class="lp" data-l="connect">Linking words</button>
     </div>
     <div class="speak-unsupported" id="ttsUnsupported">⚠️ Speech not supported here</div>
-    <p class="ttsnote">🔊 hear it · 🎤 opens a box → use your keyboard's mic to say it & check · offline</p>
+    <p class="ttsnote">🔊 hear it · 🎤 tap & speak → instant pronunciation check · 🇺🇸 US male</p>
     <div id="vocabList"></div>
   </div>
 
@@ -214,7 +205,7 @@
   <div class="panel" id="p-dialogues">
     <p class="sub" style="margin-bottom:14px">Real B1–B2 conversations for <b>shadowing</b>: play a line, then repeat it copying the rhythm. Practice both roles.</p>
     <div class="levelpick" id="diapick"></div>
-    <p class="ttsnote">🔊 hear a line · 🎤 opens a box → keyboard mic to say it & check · 🎬 play all</p>
+    <p class="ttsnote">🔊 hear a line · 🎤 tap & speak → instant check · 🎬 play all</p>
     <div id="diaList"></div>
   </div>
 
@@ -470,30 +461,82 @@ if('speechSynthesis' in window){
   window.speechSynthesis.onvoiceschanged=()=>{ window.speechSynthesis.getVoices(); pickUSMaleVoice(); };
 }
 
-/* ---------- PRONUNCIATION CHECK via phone keyboard mic ---------- */
-// No web mic needed. User taps the input, presses the keyboard's 🎤 (Gboard),
-// speaks, and we compare the typed/spoken text to the target. Works on a file.
+/* ---------- PRONUNCIATION CHECK — real live mic (Web Speech API) ---------- */
+// Works on https (GitHub Pages) and inside the PWABuilder APK.
+// Falls back to a keyboard-mic text box only if live recognition is unavailable.
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recognizer=null, recBtn=null;
 
 function norm(s){ return (s||'').toLowerCase().replace(/[^a-z' ]/g,'').replace(/\s+/g,' ').trim(); }
 
-function checkSpoken(target, inputEl, resultEl){
-  const said = inputEl.value;
-  if(!said.trim()){
-    resultEl.className='mic-result show';
-    resultEl.innerHTML='<span class="heard">👆 Tap the box, press the 🎤 on your keyboard, and say: <b>'+target+'</b></span>';
-    return;
-  }
-  const t=norm(target), s=norm(said);
-  const match = s===t || s.includes(t) || t.includes(s);
+function showResult(resultEl, target, said, match){
+  resultEl.className='mic-result show';
   if(match){
-    resultEl.className='mic-result show';
-    resultEl.innerHTML='<span class="ok">✅ Correct! Well done.</span><br><span class="heard">You said: <b>'+said+'</b></span>';
+    resultEl.innerHTML='<span class="ok">✅ Correct! Well done.</span><br><span class="heard">Heard: <b>'+said+'</b></span>';
   } else {
-    resultEl.className='mic-result show';
     resultEl.innerHTML='<span class="bad">❌ Not matching yet — try again.</span><br>'+
-      '<span class="heard">You said: <b>'+said+'</b><br>Target: <b>'+target+'</b></span><br>'+
+      '<span class="heard">You said: <b>'+(said||'(nothing)')+'</b><br>Target: <b>'+target+'</b></span><br>'+
       '<span class="heard">💡 Tap 🔊 to hear it, then repeat.</span>';
   }
+}
+
+// Live mic: tap → speak → auto-check
+function startListening(target, micBtn, resultEl, inputWrap){
+  if(!SR){
+    // no live recognition → reveal keyboard fallback box
+    if(inputWrap){ inputWrap.style.display='flex'; const inp=inputWrap.querySelector('.mic-input'); inp.value=''; inp.focus(); }
+    resultEl.className='mic-result show';
+    resultEl.innerHTML='<span class="heard">🎤 Live mic not available here. Use the box: tap it, press your keyboard 🎤, say: <b>'+target+'</b></span>';
+    return;
+  }
+  // tapping again stops
+  if(recBtn===micBtn && recognizer){ try{recognizer.stop();}catch(e){} return; }
+  if(recognizer){ try{recognizer.stop();}catch(e){} }
+
+  recognizer = new SR();
+  recognizer.lang='en-US';
+  recognizer.interimResults=false;
+  recognizer.maxAlternatives=5;
+
+  recBtn=micBtn; micBtn.classList.add('rec');
+  resultEl.className='mic-result show';
+  resultEl.innerHTML='<span class="heard">🎤 Listening… say: <b>'+target+'</b></span>';
+
+  recognizer.onresult=(ev)=>{
+    const alts=[]; for(let i=0;i<ev.results[0].length;i++) alts.push(ev.results[0][i].transcript);
+    const heard=alts[0]||'';
+    const t=norm(target);
+    const match = alts.some(a=>{ const n=norm(a); return n===t || n.includes(t) || t.includes(n); });
+    showResult(resultEl, target, heard, match);
+  };
+  recognizer.onerror=(e)=>{
+    let msg;
+    if(e.error==='not-allowed'||e.error==='service-not-allowed'){
+      msg='⚠️ Microphone blocked. Allow mic access for this site/app, then tap 🎤 again.';
+    } else if(e.error==='no-speech'){
+      msg='🔇 I didn\'t hear anything. Tap 🎤 and speak clearly.';
+    } else if(e.error==='network'){
+      msg='🌐 Live mic needs internet. Use the keyboard 🎤 box instead.';
+      if(inputWrap){ inputWrap.style.display='flex'; }
+    } else {
+      msg='⚠️ '+e.error;
+    }
+    resultEl.className='mic-result show';
+    resultEl.innerHTML='<span class="bad">'+msg+'</span>';
+  };
+  recognizer.onend=()=>{ micBtn.classList.remove('rec'); recBtn=null; };
+
+  try{ recognizer.start(); }
+  catch(e){ micBtn.classList.remove('rec'); recBtn=null; }
+}
+
+// keyboard fallback checker (still used by the box)
+function checkSpoken(target, inputEl, resultEl){
+  const said=inputEl.value;
+  if(!said.trim()){ resultEl.className='mic-result show'; resultEl.innerHTML='<span class="heard">Type or speak with the keyboard 🎤, then Check.</span>'; return; }
+  const t=norm(target), s=norm(said);
+  showResult(resultEl, target, said, (s===t||s.includes(t)||t.includes(s)));
 }
 
 /* ---------- TABS ---------- */
@@ -523,7 +566,7 @@ function renderVocab(){
         <button class="vex-speak" data-sp="${i}-e">🔊</button>
       </div>
       <div class="mic-input-wrap" id="miw-${i}" style="display:none">
-        <input class="mic-input" id="min-${i}" placeholder="Tap 🎤 on your keyboard, then say the word…" autocapitalize="none" autocomplete="off">
+        <input class="mic-input" id="min-${i}" placeholder="Say it with keyboard 🎤, then Check…" autocapitalize="none" autocomplete="off">
         <button class="mic-check" data-check="${i}">Check</button>
       </div>
       <div class="mic-result" id="mres-${i}"></div>
@@ -538,10 +581,7 @@ document.getElementById('vocabList').addEventListener('click',e=>{
   const mic=e.target.closest('[data-mic]');
   if(mic){
     const i=+mic.dataset.mic;
-    const wrap=document.getElementById('miw-'+i);
-    wrap.style.display = wrap.style.display==='none' ? 'flex' : 'none';
-    const inp=document.getElementById('min-'+i);
-    if(wrap.style.display==='flex'){ inp.value=''; inp.focus(); }
+    startListening(VOCAB[curLevel][i].w, mic, document.getElementById('mres-'+i), document.getElementById('miw-'+i));
     return;
   }
   const chk=e.target.closest('[data-check]');
@@ -601,7 +641,7 @@ function renderDia(){
         <button class="line-mic" data-dmic="${i}">🎤</button>
         <div class="bubble"><div class="who">${l.who}</div>${l.t}
           <div class="mic-input-wrap" id="dmiw-${i}" style="display:none">
-            <input class="mic-input" id="dmin-${i}" placeholder="Tap 🎤 on keyboard, then say the line…" autocapitalize="none" autocomplete="off">
+            <input class="mic-input" id="dmin-${i}" placeholder="Say it with keyboard 🎤, then Check…" autocapitalize="none" autocomplete="off">
             <button class="mic-check" data-dcheck="${i}">Check</button>
           </div>
           <div class="mic-result" id="dres-${i}"></div>
@@ -617,11 +657,8 @@ document.getElementById('diaList').addEventListener('click',e=>{
   const playB=e.target.closest('#diaPlayBtn');
   if(playB){ playWholeDialogue(playB); return; }
   const mic=e.target.closest('[data-dmic]');
-  if(mic){ const i=+mic.dataset.dmic;
-    const wrap=document.getElementById('dmiw-'+i);
-    wrap.style.display = wrap.style.display==='none' ? 'flex' : 'none';
-    const inp=document.getElementById('dmin-'+i);
-    if(wrap.style.display==='flex'){ inp.value=''; inp.focus(); }
+  if(mic){ const d=DIALOGUES.find(x=>x.id===curDia); const i=+mic.dataset.dmic;
+    startListening(d.lines[i].t, mic, document.getElementById('dres-'+i), document.getElementById('dmiw-'+i));
     return; }
   const chk=e.target.closest('[data-dcheck]');
   if(chk){ const d=DIALOGUES.find(x=>x.id===curDia); const i=+chk.dataset.dcheck;
